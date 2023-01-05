@@ -1,0 +1,12 @@
+[submodule "glslang"]
+	path = glslang
+	url = https://github.com/KhronosGroup/glslang.git
+[submodule "spirv_cross"]
+	path = spirv_cross
+	url = https://github.com/KhronosGroup/SPIRV-Cross.git
+[submodule "gfx"]
+	path = gfx
+	url = https://github.com/Xrysnow/cocos2d-x-gfx.git
+[submodule "openal"]
+	path = openal
+	url = https://github.com/kcat/openal-soft.git
