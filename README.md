@@ -137,7 +137,7 @@
 
 ## png
 - [![Upstream](https://img.shields.io/github/v/tag/glennrp/libpng?label=Upstream)](https://github.com/glennrp/libpng)
-- Version: 1.6.38 with arm64 neon detect fix
+- Version: 1.6.39
 - License: PNG Reference Library License version 2
 
 ## poly2tri
@@ -199,7 +199,7 @@
 
 ## yasio
 - [![Upstream](https://img.shields.io/github/v/release/yasio/yasio?label=Upstream)](https://github.com/yasio/yasio)
-- Version: 3.39.4
+- Version: 3.39.6
 - License: MIT WITH Anti-996
 
 ## zlib
