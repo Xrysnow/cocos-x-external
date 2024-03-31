@@ -23,7 +23,7 @@ set(${target_name}_src
     pngwutil.c
 )
 
-if (AX_ISA_SIMD STREQUAL "neon")
+if (CC_ISA_SIMD STREQUAL "neon")
   set(libpng_arm_sources
     arm/arm_init.c
     arm/filter_neon_intrinsics.c
@@ -31,7 +31,7 @@ if (AX_ISA_SIMD STREQUAL "neon")
   # notes:
   #  - android armv7: needs PNG_ARM_NEON_CHECK_SUPPORTED for very older devices, but axmol no longer support them
   set(libpng_optimize_flag "PNG_ARM_NEON_OPT=2")
-elseif(NOT (AX_ISA_SIMD STREQUAL "none"))
+elseif(NOT (CC_ISA_SIMD STREQUAL "none"))
   set(libpng_intel_sources
     intel/intel_init.c
     intel/filter_sse2_intrinsics.c)
