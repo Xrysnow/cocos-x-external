@@ -121,7 +121,7 @@
 //----------------------------------------------------------------------------- 
 // pause
 //----------------------------------------------------------------------------- 
-#if __has_include (<immintrin.h>)
+#if __has_include (<immintrin.h>) && (defined(__i386__) || defined(__x86_64__))
   #define TF_HAS_MM_PAUSE 1
   #include <immintrin.h>
 #endif
