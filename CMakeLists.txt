@@ -359,12 +359,15 @@ endif()
 
 if(CC_USE_GFX)
     # glslang
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build Shared Libraries" FORCE)
+    set(ENABLE_GLSLANG_JS OFF CACHE BOOL "If using Emscripten, build glslang.js. Otherwise, builds a sample executable for binary-size testing." FORCE)
     set(BUILD_EXTERNAL OFF CACHE BOOL "Build external dependencies in /External" FORCE)
-    set(ENABLE_GLSLANG_BINARIES OFF CACHE BOOL "Builds glslangValidator and spirv-remap" FORCE)
+    set(ENABLE_GLSLANG_BINARIES OFF CACHE BOOL "Builds glslang and spirv-remap" FORCE)
     set(ENABLE_RTTI ON CACHE BOOL "Enables RTTI" FORCE)
-    set(ENABLE_CTEST OFF CACHE BOOL "Enables testing" FORCE)
+    set(ENABLE_EXCEPTIONS ON CACHE BOOL "Enables Exceptions" FORCE)
+    set(ENABLE_OPT OFF CACHE BOOL "Enables spirv-opt capability if present" FORCE)
     add_subdirectory(glslang)
-    target_link_libraries(external SPVRemapper SPIRV HLSL glslang MachineIndependent OGLCompiler OSDependent GenericCodeGen)
+    target_link_libraries(external SPVRemapper SPIRV glslang MachineIndependent OSDependent GenericCodeGen glslang-default-resource-limits)
 
     # spirv-cross
     set(SPIRV_CROSS_CLI OFF CACHE BOOL "Build the CLI binary. Requires SPIRV_CROSS_STATIC." FORCE)
@@ -389,12 +392,11 @@ if(CC_USE_GFX)
     set(libs_to_config
         SPVRemapper
         SPIRV
-        HLSL
         glslang
         MachineIndependent
-        OGLCompiler
         OSDependent
         GenericCodeGen
+        glslang-default-resource-limits
         spirv-cross-c
         spirv-cross-util
         spirv-cross-hlsl
