@@ -12,6 +12,7 @@
 
 #define CLIPPER2_VERSION "1.0.6"
 
+#include <cstdint>
 #include <cstdlib>
 #include <queue>
 #include <stdexcept>
