@@ -331,7 +331,7 @@ endif()
 
 add_and_configure(ogg ogg)
 
-if(WINDOWS OR LINUX)
+if(WINDOWS OR LINUX OR ANDROID)
     add_and_configure(glad glad)
 endif()
 
