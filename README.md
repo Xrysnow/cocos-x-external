@@ -58,7 +58,7 @@
 
 ## glfw
 - [![Upstream](https://img.shields.io/github/v/release/glfw/glfw?label=Upstream)](https://github.com/glfw/glfw)
-- Version: git df8d7bc on 31 Dec 2021 (4398)
+- Version: 3.5.1
 - License: zlib
 
 ## glsl-optimizer (Apple Metal Render backend only)
