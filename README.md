@@ -51,6 +51,11 @@
 - Version: 2.14.3
 - License: BSD-style (The FreeType Project)
 
+## GHC (iOS devices only)
+- [![Upstream](https://img.shields.io/github/v/release/gulrak/filesystem?label=Upstream)](https://github.com/gulrak/filesystem)
+- Version: 1.5.12
+- License: MIT
+
 ## Glad
 - [![Upstream](https://img.shields.io/github/v/tag/Dav1dde/glad?label=Upstream)](https://github.com/Dav1dde/glad)
 - Version: 2.0.2
@@ -64,11 +69,6 @@
 ## glsl-optimizer (Apple Metal Render backend only)
 - Upstream: https://github.com/aras-p/glsl-optimizer
 - Version: git d78c3d2
-- License: MIT
-
-## GHC (iOS devices only)
-- [![Upstream](https://img.shields.io/github/v/release/gulrak/filesystem?label=Upstream)](https://github.com/gulrak/filesystem)
-- Version: 1.5.12
 - License: MIT
 
 ## jni.hpp
@@ -209,7 +209,7 @@
 
 ## xxHash
 - [![Upstream](https://img.shields.io/github/v/release/Cyan4973/xxHash?label=Upstream)](https://github.com/Cyan4973/xxHash)
-- Version: 0.8.1
+- Version: 0.8.3
 - License: BSD-2-Clause
 
 ## yasio
