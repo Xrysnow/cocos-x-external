@@ -48,7 +48,7 @@
 
 ## FreeType
 - Upstream: https://www.freetype.org/
-- Version: 2.12.1
+- Version: 2.14.3
 - License: BSD-style (The FreeType Project)
 
 ## Glad
