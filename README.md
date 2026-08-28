@@ -135,6 +135,11 @@
   - Version: git 1.3.7-83a82dd (1569)
   - License: BSD-3-Clause
 
+## OpenAL Soft
+- [![Upstream](https://img.shields.io/github/v/tag/kcat/openal-soft?label=Upstream)](https://github.com/kcat/openal-soft)
+- Version: 1.25.2
+- License: LGPL-2
+
 ## OpenSSL
 - [![Upstream](https://img.shields.io/github/v/tag/openssl/openssl?label=Upstream)](https://github.com/openssl/openssl)
 - Version: 3.0.7
