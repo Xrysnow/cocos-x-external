@@ -167,6 +167,11 @@
     - Forward `robin_map::operator[]` key by `std::forward` same with `stl map/unordered_map`
 - License: MIT
 
+## SPIRV-Cross
+- [![Upstream](https://img.shields.io/github/v/tag/KhronosGroup/SPIRV-Cross?label=Upstream)](https://github.com/KhronosGroup/SPIRV-Cross)
+- Version: git 9c3c8e2
+- License: Apache-2.0
+
 ## stb (stb_image)
 - Upstream: https://github.com/nothings/stb
 - Version: 2.27
