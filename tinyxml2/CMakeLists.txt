@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.10)
 
 set(lib_name tinyxml2)
 set(target_name ${lib_name})
