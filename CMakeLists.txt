@@ -203,6 +203,7 @@ if(BUILD_EXT_CHIPMUNK)
 endif()
 
 if(BUILD_EXT_FREETYPE)
+    # Linux uses system FreeType via CocosConfigDepend.cmake.
     if (NOT LINUX)
         set(FT_DISABLE_ZLIB OFF CACHE BOOL "Disable use of system zlib and use internal zlib library instead." FORCE)
         set(DISABLE_FORCE_DEBUG_POSTFIX ON CACHE BOOL "DISABLE_FORCE_DEBUG_POSTFIX" FORCE)
@@ -213,8 +214,8 @@ if(BUILD_EXT_FREETYPE)
         add_subdirectory(freetype)
         target_link_libraries(external freetype)
         configure_target_outdir(freetype)
+        target_include_directories(external PUBLIC "freetype/include")
     endif()
-    target_include_directories(external PUBLIC "freetype/include")
 endif()
 
 if(BUILD_EXT_RECAST)
