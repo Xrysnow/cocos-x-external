@@ -227,7 +227,7 @@ if(BUILD_EXT_BULLET)
 endif()
 
 if(BUILD_EXT_JPEG)
-    add_subdirectory(jpeg)
+    include(cmake/BuildJpegTurbo.cmake)
     target_link_libraries(external jpeg)
 endif()
 

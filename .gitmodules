@@ -10,3 +10,6 @@
 [submodule "openal"]
 	path = openal
 	url = https://github.com/kcat/openal-soft.git
+[submodule "jpeg-turbo"]
+	path = jpeg-turbo
+	url = https://github.com/libjpeg-turbo/libjpeg-turbo.git

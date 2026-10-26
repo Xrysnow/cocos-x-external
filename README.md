@@ -76,6 +76,12 @@
 - Version: v4.0.0
 - License: MIT-like
 
+## jpeg-turbo (libjpeg-turbo)
+
+- [![Upstream](https://img.shields.io/github/v/release/libjpeg-turbo/libjpeg-turbo?label=Upstream)](https://github.com/libjpeg-turbo/libjpeg-turbo)
+- Version: 3.2.0
+- License: IJG and BSD-3-Clause
+
 ## llhttp
 - [![Upstream](https://img.shields.io/github/v/release/nodejs/llhttp?label=Upstream)](https://github.com/nodejs/llhttp)
 - Version: 8.1.0
