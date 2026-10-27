@@ -364,70 +364,68 @@ if(BUILD_EXT_LLHTTP)
     add_and_configure(llhttp llhttp)
 endif()
 
-if(CC_USE_GFX)
-    # glslang
-    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build Shared Libraries" FORCE)
-    set(ENABLE_GLSLANG_JS OFF CACHE BOOL "If using Emscripten, build glslang.js. Otherwise, builds a sample executable for binary-size testing." FORCE)
-    set(BUILD_EXTERNAL OFF CACHE BOOL "Build external dependencies in /External" FORCE)
-    set(ENABLE_GLSLANG_BINARIES OFF CACHE BOOL "Builds glslang and spirv-remap" FORCE)
-    set(ENABLE_RTTI ON CACHE BOOL "Enables RTTI" FORCE)
-    set(ENABLE_EXCEPTIONS ON CACHE BOOL "Enables Exceptions" FORCE)
-    set(ENABLE_OPT OFF CACHE BOOL "Enables spirv-opt capability if present" FORCE)
-    add_subdirectory(glslang)
-    target_link_libraries(external SPVRemapper SPIRV glslang MachineIndependent OSDependent GenericCodeGen glslang-default-resource-limits)
+# glslang
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build Shared Libraries" FORCE)
+set(ENABLE_GLSLANG_JS OFF CACHE BOOL "If using Emscripten, build glslang.js. Otherwise, builds a sample executable for binary-size testing." FORCE)
+set(BUILD_EXTERNAL OFF CACHE BOOL "Build external dependencies in /External" FORCE)
+set(ENABLE_GLSLANG_BINARIES OFF CACHE BOOL "Builds glslang and spirv-remap" FORCE)
+set(ENABLE_RTTI ON CACHE BOOL "Enables RTTI" FORCE)
+set(ENABLE_EXCEPTIONS ON CACHE BOOL "Enables Exceptions" FORCE)
+set(ENABLE_OPT OFF CACHE BOOL "Enables spirv-opt capability if present" FORCE)
+add_subdirectory(glslang)
+target_link_libraries(external SPVRemapper SPIRV glslang MachineIndependent OSDependent GenericCodeGen glslang-default-resource-limits)
 
-    # spirv-cross
-    set(SPIRV_CROSS_CLI OFF CACHE BOOL "Build the CLI binary. Requires SPIRV_CROSS_STATIC." FORCE)
-    set(SPIRV_CROSS_ENABLE_TESTS OFF CACHE BOOL "Enable SPIRV-Cross tests." FORCE)
-    set(SPIRV_CROSS_SKIP_INSTALL OFF CACHE BOOL "Skips installation targets." FORCE)
-    add_subdirectory(spirv_cross)
-    target_link_libraries(external spirv-cross-c spirv-cross-util spirv-cross-hlsl spirv-cross-msl spirv-cross-reflect spirv-cross-cpp spirv-cross-glsl spirv-cross-core)
+# spirv-cross
+set(SPIRV_CROSS_CLI OFF CACHE BOOL "Build the CLI binary. Requires SPIRV_CROSS_STATIC." FORCE)
+set(SPIRV_CROSS_ENABLE_TESTS OFF CACHE BOOL "Enable SPIRV-Cross tests." FORCE)
+set(SPIRV_CROSS_SKIP_INSTALL OFF CACHE BOOL "Skips installation targets." FORCE)
+add_subdirectory(spirv_cross)
+target_link_libraries(external spirv-cross-c spirv-cross-util spirv-cross-hlsl spirv-cross-msl spirv-cross-reflect spirv-cross-cpp spirv-cross-glsl spirv-cross-core)
 
-    if(USE_JOB_SYSTEM_TBB)        
-        # tbb
-        set(TBB_BUILD_SHARED OFF CACHE BOOL "Build TBB shared library" FORCE)
-        set(TBB_BUILD_TESTS OFF CACHE BOOL "Build TBB tests and enable testing infrastructure" FORCE)
-        set(TBB_INSTALL_TARGETS OFF CACHE BOOL "Include build targets for 'make install'" FORCE)
-        add_subdirectory(tbb)
-        target_link_libraries(external tbb_static tbbmalloc_static tbbmalloc_proxy_static)
-    endif()
-
-    # gfx
-    add_subdirectory(gfx)
-    target_link_libraries(external ext_gfx)
-
-    set(libs_to_config
-        SPVRemapper
-        SPIRV
-        glslang
-        MachineIndependent
-        OSDependent
-        GenericCodeGen
-        glslang-default-resource-limits
-        spirv-cross-c
-        spirv-cross-util
-        spirv-cross-hlsl
-        spirv-cross-msl
-        spirv-cross-reflect
-        spirv-cross-cpp
-        spirv-cross-glsl
-        spirv-cross-core
-        ext_gfx
-    )
-
-    if(USE_JOB_SYSTEM_TBB)
-        list(APPEND libs_to_config
-            tbb_static
-            tbbmalloc_static
-            tbbmalloc_proxy_static
-            tbb_def_files
-        )
-    endif()
-
-    foreach(_lib ${libs_to_config})
-        configure_target_outdir(${_lib})
-    endforeach()
+if(USE_JOB_SYSTEM_TBB)
+    # tbb
+    set(TBB_BUILD_SHARED OFF CACHE BOOL "Build TBB shared library" FORCE)
+    set(TBB_BUILD_TESTS OFF CACHE BOOL "Build TBB tests and enable testing infrastructure" FORCE)
+    set(TBB_INSTALL_TARGETS OFF CACHE BOOL "Include build targets for 'make install'" FORCE)
+    add_subdirectory(tbb)
+    target_link_libraries(external tbb_static tbbmalloc_static tbbmalloc_proxy_static)
 endif()
+
+# gfx
+add_subdirectory(gfx)
+target_link_libraries(external ext_gfx)
+
+set(libs_to_config
+    SPVRemapper
+    SPIRV
+    glslang
+    MachineIndependent
+    OSDependent
+    GenericCodeGen
+    glslang-default-resource-limits
+    spirv-cross-c
+    spirv-cross-util
+    spirv-cross-hlsl
+    spirv-cross-msl
+    spirv-cross-reflect
+    spirv-cross-cpp
+    spirv-cross-glsl
+    spirv-cross-core
+    ext_gfx
+)
+
+if(USE_JOB_SYSTEM_TBB)
+    list(APPEND libs_to_config
+        tbb_static
+        tbbmalloc_static
+        tbbmalloc_proxy_static
+        tbb_def_files
+    )
+endif()
+
+foreach(_lib ${libs_to_config})
+    configure_target_outdir(${_lib})
+endforeach()
 
 # put "external" into External folder, too
 configure_target_outdir(external)
