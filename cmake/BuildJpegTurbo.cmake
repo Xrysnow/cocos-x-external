@@ -39,6 +39,9 @@ function(cocos_build_jpeg_turbo)
     )
         if(DEFINED ${variable} AND NOT "${${variable}}" STREQUAL "")
             string(REPLACE ";" "|" value "${${variable}}")
+            # ExternalProject stamps embed arguments in a CMake string, where raw
+            # Windows paths such as D:\Programs become invalid character escapes.
+            string(REPLACE "\\" "/" value "${value}")
             # Keep expressions such as the MSVC runtime's Debug selection in the child project.
             string(REPLACE "$<" "$<1:$><" value "${value}")
             list(APPEND jpeg_args "-D${variable}:STRING=${value}")
