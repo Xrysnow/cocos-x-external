@@ -49,7 +49,16 @@ function(cocos_build_jpeg_turbo)
     endforeach()
     if(CMAKE_CROSSCOMPILING)
         foreach(variable CMAKE_SYSTEM_NAME CMAKE_SYSTEM_VERSION CMAKE_SYSTEM_PROCESSOR)
-            list(APPEND jpeg_args "-D${variable}:STRING=${${variable}}")
+            set(jpeg_system_value "${${variable}}")
+            if(variable STREQUAL "CMAKE_SYSTEM_PROCESSOR" AND NOT jpeg_system_value AND CMAKE_OSX_ARCHITECTURES)
+                # Xcode iOS cross builds leave CMAKE_SYSTEM_PROCESSOR empty unless a
+                # toolchain file fills it; jpeg-turbo requires a non-empty value and
+                # needs the target CPU, so derive it from the requested architectures.
+                list(GET CMAKE_OSX_ARCHITECTURES 0 jpeg_system_value)
+            endif()
+            if(NOT jpeg_system_value STREQUAL "")
+                list(APPEND jpeg_args "-D${variable}:STRING=${jpeg_system_value}")
+            endif()
         endforeach()
     endif()
 
@@ -73,7 +82,17 @@ function(cocos_build_jpeg_turbo)
     endif()
     get_property(jpeg_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
     if(jpeg_multi_config)
-        set(jpeg_archive_suffix "/$<CONFIG>/${jpeg_filename}")
+        # Xcode iPhoneOS/Simulator builds append an effective-platform suffix
+        # (-iphoneos/-iphonesimulator) after the configuration name in per-config
+        # output directories; other multi-config generators don't. The variable is
+        # only available at generate time, so derive it from the requested sysroot.
+        set(jpeg_platform_suffix "")
+        get_filename_component(jpeg_sysroot_name "${CMAKE_OSX_SYSROOT}" NAME)
+        string(TOLOWER "${jpeg_sysroot_name}" jpeg_sysroot_name)
+        if(XCODE AND jpeg_sysroot_name MATCHES "^(iphoneos|iphonesimulator)")
+            set(jpeg_platform_suffix "-${CMAKE_MATCH_1}")
+        endif()
+        set(jpeg_archive_suffix "/$<CONFIG>${jpeg_platform_suffix}/${jpeg_filename}")
     else()
         set(jpeg_archive_suffix "/${jpeg_filename}")
     endif()
