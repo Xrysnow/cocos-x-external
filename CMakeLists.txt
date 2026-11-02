@@ -430,15 +430,6 @@ endforeach()
 # put "external" into External folder, too
 configure_target_outdir(external)
 
-if(MACOSX OR IOS)
-    add_subdirectory(glsl-optimizer)
-    target_link_libraries(external 
-        ext_glcpp_library
-        ext_glsl_optimizer
-        ext_libmesa
-    )
-endif()
-
 if (ANDROID)
     function(config_android_shared_libs package_name target_folder)
         string(REPLACE "." "/" package_path ${package_name})

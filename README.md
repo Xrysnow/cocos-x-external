@@ -66,11 +66,6 @@
 - Version: 3.5.1
 - License: zlib
 
-## glsl-optimizer (Apple Metal Render backend only)
-- Upstream: https://github.com/aras-p/glsl-optimizer
-- Version: git d78c3d2
-- License: MIT
-
 ## jni.hpp
 - [![Upstream](https://img.shields.io/github/v/release/mapbox/jni.hpp?label=Upstream)](https://github.com/mapbox/jni.hpp)
 - Version: v4.0.0
