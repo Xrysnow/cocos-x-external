@@ -1,3 +1,9 @@
+if(WIN32 AND NOT ANDROID)
+    include("${CMAKE_CURRENT_LIST_DIR}/../cmake/OpenSSLConsumers.cmake")
+    return()
+endif()
+
+message(STATUS "OpenSSL source migration is not yet enabled for this platform; using the existing precompiled dependency")
 
 set(lib_name openssl)
 
