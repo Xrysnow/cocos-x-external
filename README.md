@@ -33,7 +33,7 @@
 
 ## curl
 - [![Upstream](https://img.shields.io/github/v/release/curl/curl?label=Upstream)](https://github.com/curl/curl)
-- Version: 7.86.0
+- Version: 8.23.0
 - License: Curl (MIT/X)
 
 ## flatbuffers

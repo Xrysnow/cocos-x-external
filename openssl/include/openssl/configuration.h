@@ -33,6 +33,8 @@
 #    include "android-arm64/openssl/configuration.h"
 #  elif defined(__arm__)
 #    include "android-arm/openssl/configuration.h"
+#  elif defined(__x86_64__)
+#    include "android-x86_64/openssl/configuration.h"
 #  else
 #    include "android-x86/openssl/configuration.h"
 #  endif

@@ -13,3 +13,6 @@
 [submodule "jpeg-turbo"]
 	path = jpeg-turbo
 	url = https://github.com/libjpeg-turbo/libjpeg-turbo.git
+[submodule "curl"]
+	path = curl
+	url = https://github.com/curl/curl.git

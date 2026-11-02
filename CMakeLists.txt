@@ -303,11 +303,8 @@ if(BUILD_LUA_LIBS)
     target_compile_definitions(lua-cjson PRIVATE USING_LUAJIT=1)
 endif()
 
-add_subdirectory(curl)
-if(ANDROID OR LINUX)
-    target_link_libraries(libcurl INTERFACE OpenSSL::SSL)
-endif()
-target_link_libraries(external libcurl)
+include(cmake/BuildCurl.cmake)
+target_link_libraries(external CURL::libcurl)
 
 # if(ANDROID)
 #     add_subdirectory(android-specific/pvmp3dec)

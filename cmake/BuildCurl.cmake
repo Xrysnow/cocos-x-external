@@ -1,0 +1,55 @@
+# Keep the upstream submodule unchanged and scope its build options locally.
+include_guard(GLOBAL)
+
+function(cocos_build_curl)
+    get_filename_component(curl_source "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../curl" ABSOLUTE)
+    if(NOT EXISTS "${curl_source}/CMakeLists.txt")
+        message(FATAL_ERROR "Initialize the external/curl submodule before configuring.")
+    endif()
+
+    # curl's dependency options use CACHE STRING; preserve our local overrides.
+    set(CMAKE_POLICY_DEFAULT_CMP0126 NEW)
+    set(BUILD_SHARED_LIBS OFF)
+    set(BUILD_STATIC_LIBS ON)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    set(CURL_STATIC_CRT OFF)
+    set(BUILD_CURL_EXE OFF)
+    set(BUILD_TESTING OFF)
+    set(BUILD_EXAMPLES OFF)
+    set(BUILD_LIBCURL_DOCS OFF)
+    set(BUILD_MISC_DOCS OFF)
+    set(ENABLE_CURL_MANUAL OFF)
+    set(CURL_DISABLE_INSTALL ON)
+    set(CURL_ENABLE_EXPORT_TARGET OFF)
+
+    # Use the existing OpenSSL and zlib targets on every platform.
+    set(CURL_ENABLE_SSL ON)
+    set(CURL_USE_OPENSSL ON)
+    set(CURL_USE_SCHANNEL OFF)
+    set(CURL_USE_MBEDTLS OFF)
+    set(CURL_USE_WOLFSSL OFF)
+    set(CURL_USE_GNUTLS OFF)
+    set(CURL_USE_RUSTLS OFF)
+    set(CURL_ZLIB ON)
+
+    # Avoid adding dependencies according to what happens to be installed.
+    set(CURL_USE_PKGCONFIG OFF)
+    set(CURL_USE_CMAKECONFIG OFF)
+    set(CURL_USE_LIBPSL OFF)
+    set(CURL_BROTLI OFF)
+    set(CURL_ZSTD OFF)
+    set(USE_NGHTTP2 OFF)
+    set(USE_NGTCP2 OFF)
+    set(USE_QUICHE OFF)
+    set(CURL_USE_LIBSSH2 OFF)
+    set(CURL_USE_LIBSSH OFF)
+    set(USE_LIBIDN2 OFF)
+
+    add_subdirectory("${curl_source}" "${CMAKE_CURRENT_BINARY_DIR}/curl" EXCLUDE_FROM_ALL)
+    configure_target_outdir(libcurl_static)
+    if(TARGET libcurl_object)
+        set_target_properties(libcurl_object PROPERTIES FOLDER "External")
+    endif()
+endfunction()
+
+cocos_build_curl()
