@@ -1,22 +1,107 @@
 {
-  "schema": 1,
+  "schema": 2,
   "version": "3.5.9",
   "archive_sha256": "603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a",
   "full_inventory_sha256": "d31549aecd20f6f1300e7ca20ef1feb4874b04822758f497b817e2fe7cd17af6",
   "full_source_sha256": "d31549aecd20f6f1300e7ca20ef1feb4874b04822758f497b817e2fe7cd17af6",
-  "pruned_source_sha256": "27be391ce369f7e3ca192eebee12027ffc0fd68fb425abeac35e74621f34f096",
+  "pruned_source_sha256": "f2df1044f1eeed7408078e8a0256ceb99c33c5508c6f27e176e7dea5311d2bb1",
+  "executables_sha256": "b3d4fb4b5a5cd988c3b684a16522b35c62b8458632445203e9b06febc61f1d22",
   "full_directories_sha256": "3c12a2fc81228c97ae817c82aa5d5d218c7bc136d891f7ea5756694806c894e3",
-  "pruned_directories_sha256": "2449fba5395d06311003f6d4c3e5ad1d6f0b8b59f8c3b8807935ec3434b803fa",
+  "pruned_directories_sha256": "ee070ac8b3cde6092979a008c069e4ed56b342b31e899387c3fda01ed9b65e1c",
   "full_files": 5779,
-  "pruned_files": 3555,
+  "pruned_files": 2181,
   "full_bytes": 131230833,
-  "pruned_bytes": 41855839,
-  "excluded_directories": ["test", "demos", "engines", ".ctags.d"],
-  "excluded_empty_directories": [
-    "cloudflare-quiche", "oqs-provider", "pkcs11-provider", "python-ecdsa",
-    "tlsfuzzer", "tlslite-ng", "wycheproof"
+  "pruned_bytes": 28850130,
+  "excluded_directories": [
+    "test",
+    "demos",
+    "engines",
+    ".ctags.d",
+    "crypto/cmp",
+    "crypto/cms",
+    "crypto/ts",
+    "crypto/comp",
+    "crypto/engine",
+    "crypto/crmf",
+    "crypto/md2",
+    "crypto/rc5",
+    "VMS"
   ],
-  "required_options": ["no-tests", "no-demos", "no-engine"],
-  "retained_directories": ["apps", "doc", "fuzz", "tools", "providers", "ssl/quic"],
-  "policy": "Local fixed input only. Exclusions apply to a new snapshot, never to the original source or archive. All retained upstream bytes, build.info files and licenses are unchanged. The full source remains available for official tests. Additional exclusions require a new review and manifest."
+  "excluded_empty_directories": [
+    "cloudflare-quiche",
+    "oqs-provider",
+    "pkcs11-provider",
+    "python-ecdsa",
+    "tlsfuzzer",
+    "tlslite-ng",
+    "wycheproof",
+    "fuzz/corpora"
+  ],
+  "required_options": [
+    "no-apps",
+    "no-tests",
+    "no-docs",
+    "no-demos",
+    "no-engine",
+    "no-cmp",
+    "no-cms",
+    "no-ts",
+    "no-comp",
+    "no-quic",
+    "no-fips",
+    "no-md2",
+    "no-rc5",
+    "no-fuzz-afl",
+    "no-fuzz-libfuzzer"
+  ],
+  "retained_directories": [
+    "providers",
+    "crypto/async",
+    "include"
+  ],
+  "retained_empty_directories": [],
+  "policy": "Local fixed input only. Exclusions apply to the pinned bundled or new private snapshot, never the original complete source/archive. retained_files keeps only listed unmodified files and their parent directories in each subtree. Existing peripheral features are unchanged; apps, tests, docs and demos are disabled. All retained upstream bytes and licenses remain unchanged. The full layout remains available for upstream tests and other feature selections.",
+  "excluded_files": [
+    "CHANGES.md",
+    "NEWS.md",
+    "config.com",
+    "NOTES-VMS.md"
+  ],
+  "retained_files": {
+    "apps": [
+      "build.info",
+      "lib/build.info",
+      "lib/tlssrp_depr.c",
+      "openssl.cnf",
+      "ct_log_list.cnf"
+    ],
+    "doc": [
+      "build.info",
+      "man1/build.info"
+    ],
+    "fuzz": [
+      "build.info"
+    ],
+    "tools": [
+      "build.info"
+    ],
+    "ssl/quic": [
+      "build.info",
+      "quic_tls.c",
+      "quic_tls_api.c",
+      "quic_channel_local.h",
+      "quic_engine_local.h",
+      "quic_local.h",
+      "quic_obj_local.h",
+      "quic_port_local.h",
+      "quic_record_rx_local.h",
+      "quic_record_shared.h"
+    ],
+    "providers/fips": [
+      "include/fips_indicator_params.inc",
+      "include/fips_selftest_params.inc",
+      "include/fipscommon.h",
+      "include/fips/fipsindicator.h"
+    ]
+  }
 }

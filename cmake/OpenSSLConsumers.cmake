@@ -1,7 +1,7 @@
 include_guard(GLOBAL)
 
-# Native Windows consumer migration. Other platforms retain their existing
-# precompiled entry until their source-build toolchains are implemented.
+# Windows MSVC shared consumers. Portable static consumers use
+# OpenSSLPortableConsumers.cmake with the same bundled source and fixed feature settings.
 if(NOT CMAKE_CONFIGURATION_TYPES STREQUAL "Debug;Release" AND NOT CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
     message(FATAL_ERROR "OpenSSL consumers require -DCMAKE_CONFIGURATION_TYPES=Debug;Release or Debug")
 endif()
@@ -19,39 +19,7 @@ if(NOT CMAKE_TRY_COMPILE_CONFIGURATION IN_LIST CMAKE_CONFIGURATION_TYPES)
     message(FATAL_ERROR "CMAKE_TRY_COMPILE_CONFIGURATION must be one of the prepared configurations")
 endif()
 
-set(CC_OPENSSL_SOURCE_DIR "" CACHE PATH "Local pinned OpenSSL 3.5.9 source snapshot")
-set(CC_OPENSSL_SOURCE_LAYOUT "full" CACHE STRING "Pinned OpenSSL source layout: full or pruned")
-set(CC_OPENSSL_ARCHIVE "" CACHE FILEPATH "Optional local fixed OpenSSL 3.5.9 archive")
-if(NOT CC_OPENSSL_SOURCE_DIR)
-    if(NOT EXISTS "${CC_OPENSSL_ARCHIVE}")
-        message(FATAL_ERROR "Set CC_OPENSSL_SOURCE_DIR to a pinned local 3.5.9 snapshot, or CC_OPENSSL_ARCHIVE to its fixed local tar.gz; no download is performed.")
-    endif()
-    set(prepared "${CMAKE_BINARY_DIR}/openssl-inputs")
-    if(NOT EXISTS "${prepared}/openssl-3.5.9/Configure")
-        execute_process(COMMAND "${CMAKE_COMMAND}" "-DARCHIVE=${CC_OPENSSL_ARCHIVE}"
-            "-DDESTINATION=${prepared}" -P "${CMAKE_CURRENT_LIST_DIR}/../openssl/cmake/PrepareSource.cmake"
-            RESULT_VARIABLE prepared_result)
-        if(NOT prepared_result EQUAL 0)
-            message(FATAL_ERROR "Cannot prepare the local OpenSSL snapshot")
-        endif()
-    endif()
-    set(prepared_source "${prepared}/openssl-3.5.9")
-    if(CC_OPENSSL_SOURCE_LAYOUT STREQUAL "pruned")
-        set(pruned "${CMAKE_BINARY_DIR}/openssl-pruned-inputs")
-        if(NOT EXISTS "${pruned}/openssl-3.5.9/Configure")
-            execute_process(COMMAND "${CMAKE_COMMAND}" "-DSOURCE=${prepared_source}"
-                "-DDESTINATION=${pruned}" -P "${CMAKE_CURRENT_LIST_DIR}/../openssl/cmake/PreparePrunedSource.cmake"
-                RESULT_VARIABLE pruned_result)
-            if(NOT pruned_result EQUAL 0)
-                message(FATAL_ERROR "Cannot prepare the pinned pruned OpenSSL snapshot")
-            endif()
-        endif()
-        set(prepared_source "${pruned}/openssl-3.5.9")
-    endif()
-    set(CC_OPENSSL_SOURCE_DIR "${prepared_source}" CACHE PATH "Local pinned OpenSSL 3.5.9 source snapshot" FORCE)
-endif()
-
-set(CC_OPENSSL_PROFILE "peripheral" CACHE STRING "OpenSSL feature profile")
+# Bundled input and fixed feature settings are shared with standalone drivers.
 include("${CMAKE_CURRENT_LIST_DIR}/BuildOpenSSL.cmake")
 cc_build_openssl()
 include("${CC_OPENSSL_DEBUG_INPUT}")
@@ -110,7 +78,7 @@ foreach(component Crypto SSL)
     foreach(name IN LISTS CMAKE_CONFIGURATION_TYPES)
         string(TOUPPER "${name}" config)
         set_target_properties(OpenSSL::${component} PROPERTIES
-            IMPORTED_LOCATION_${config} "${CC_OPENSSL_${config}_STAGE}/bin/lib${library}-3-x64.dll"
+            IMPORTED_LOCATION_${config} "${CC_OPENSSL_${config}_STAGE}/bin/lib${library}-3${OSSL_DLL_SUFFIX}.dll"
             IMPORTED_IMPLIB_${config} "${CC_OPENSSL_${config}_STAGE}/lib/lib${library}.lib")
     endforeach()
     add_dependencies(OpenSSL::${component} cc_openssl_publish)
@@ -134,7 +102,8 @@ set(OPENSSL_CRYPTO_LIBRARY "${probe_stage}/lib/libcrypto.lib" CACHE FILEPATH "Se
 set(OPENSSL_SSL_LIBRARY "${probe_stage}/lib/libssl.lib" CACHE FILEPATH "Selected OpenSSL probe library" FORCE)
 set(OPENSSL_USE_STATIC_LIBS OFF CACHE BOOL "Windows OpenSSL uses shared DLLs" FORCE)
 set(OPENSSL_MSVC_STATIC_RT OFF CACHE BOOL "Windows OpenSSL uses the dynamic CRT" FORCE)
-set(OPENSSL_VERSION "3.5.9" CACHE INTERNAL "Selected OpenSSL version" FORCE)
+ossl_source_version(OSSL_SOURCE_VERSION)
+set(OPENSSL_VERSION "${OSSL_SOURCE_VERSION}" CACHE INTERNAL "Selected OpenSSL version" FORCE)
 
 # The deployment helper copies modules after the per-configuration driver runs.
 set_property(TARGET OpenSSL::Crypto PROPERTY CC_RUNTIME_MODULES
@@ -147,5 +116,5 @@ foreach(name IN LISTS CMAKE_CONFIGURATION_TYPES)
 endforeach()
 file(WRITE "${CMAKE_BINARY_DIR}/openssl-stages.json"
     "${stages_json}  \"ConsumerId\": \"${consumer_id}\",\n  \"ProbeConfiguration\": \"${CMAKE_TRY_COMPILE_CONFIGURATION}\"\n}\n")
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_FILE}" "${publisher}")
-message(STATUS "OpenSSL consumers: 3.5.9 shared; profile=${CC_OPENSSL_PROFILE}; probe=${CMAKE_TRY_COMPILE_CONFIGURATION}; identity=${consumer_id}")
+ossl_add_configure_dependencies("${CMAKE_CURRENT_LIST_FILE}" "${publisher}")
+message(STATUS "OpenSSL consumers: ${OSSL_SOURCE_VERSION} ${OSSL_TARGET} shared; profile=peripheral; probe=${CMAKE_TRY_COMPILE_CONFIGURATION}; identity=${consumer_id}")

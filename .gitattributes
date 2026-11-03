@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Preserve the pinned upstream OpenSSL snapshot byte-for-byte on every host.
+openssl/src/** -text -filter -ident -working-tree-encoding
+openssl/source-executables.txt -text -filter -ident -working-tree-encoding

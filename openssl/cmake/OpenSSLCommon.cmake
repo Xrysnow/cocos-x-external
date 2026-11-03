@@ -1,5 +1,16 @@
 include_guard(GLOBAL)
 
+# Read in the caller's scope so standalone scripts and nested includes share
+# the manifest's version without relying on include-guard variable lifetime.
+function(ossl_source_version out)
+    file(READ "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../source-manifest.json" manifest)
+    string(JSON version GET "${manifest}" version)
+    if(NOT version MATCHES "^[0-9]+[.][0-9]+[.][0-9]+$")
+        message(FATAL_ERROR "Pinned OpenSSL version must have major.minor.patch form")
+    endif()
+    set(${out} "${version}" PARENT_SCOPE)
+endfunction()
+
 function(ossl_android_api out)
     # The NDK's default legacy toolchain sets CMAKE_SYSTEM_VERSION=1 as a
     # sentinel; the effective (possibly ABI-adjusted) API is recorded separately.
@@ -70,6 +81,9 @@ function(ossl_directory_inventory root out_hash)
     endforeach()
     string(SHA256 hash "${inventory}")
     set(${out_hash} "${hash}" PARENT_SCOPE)
+    if(ARGC GREATER 2)
+        set(${ARGV2} "${inventory}" PARENT_SCOPE)
+    endif()
 endfunction()
 
 function(ossl_inventory root out_hash out_text)
@@ -92,17 +106,50 @@ function(ossl_inventory root out_hash out_text)
     set(${out_text} "${inventory}" PARENT_SCOPE)
 endfunction()
 
+function(ossl_add_configure_dependencies)
+    if(CMAKE_SCRIPT_MODE_FILE)
+        return()
+    endif()
+    get_property(existing DIRECTORY PROPERTY CMAKE_CONFIGURE_DEPENDS)
+    set(dependencies ${existing} ${ARGN})
+    list(REMOVE_DUPLICATES dependencies)
+    set(canonical)
+    foreach(path IN LISTS dependencies)
+        file(REAL_PATH "${path}" resolved)
+        list(APPEND canonical "${resolved}")
+    endforeach()
+    list(REMOVE_DUPLICATES canonical)
+    set_property(DIRECTORY PROPERTY CMAKE_CONFIGURE_DEPENDS ${canonical})
+endfunction()
+
 function(ossl_adapter_hash out_hash)
-    file(GLOB files "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/*.cmake" "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/*.ps1"
+    set(glob_options)
+    if(NOT CMAKE_SCRIPT_MODE_FILE)
+        list(APPEND glob_options CONFIGURE_DEPENDS)
+    endif()
+    file(GLOB files ${glob_options} "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/*.cmake" "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/*.ps1"
         "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/*.pl")
     list(APPEND files "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../source-manifest.json"
         "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../prune-manifest.json"
+        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../source-executables.txt"
         "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../../cmake/BuildOpenSSL.cmake"
         "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../../cmake/OpenSSLConsumers.cmake"
         "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../../cmake/PublishOpenSSL.cmake")
-    file(GLOB portable_adapters "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../../cmake/*OpenSSLPortable*.cmake")
+    file(GLOB portable_adapters ${glob_options} "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../../cmake/*OpenSSLPortable*.cmake")
     list(APPEND files ${portable_adapters})
+    set(canonical)
+    foreach(file IN LISTS files)
+        file(REAL_PATH "${file}" resolved)
+        list(APPEND canonical "${resolved}")
+    endforeach()
+    set(files ${canonical})
+    list(REMOVE_DUPLICATES files)
     list(SORT files)
+    if(NOT CMAKE_SCRIPT_MODE_FILE)
+        # Hashing and invalidation must cover exactly the same adapters on every
+        # platform, including scripts used only by another supported platform.
+        ossl_add_configure_dependencies(${files})
+    endif()
     set(identity "")
     foreach(file IN LISTS files)
         file(SHA256 "${file}" hash)
