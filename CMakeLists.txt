@@ -297,7 +297,7 @@ endif()
 
 # use lua/js specific libs by property to prevent conflict
 if(BUILD_LUA_LIBS)
-    add_subdirectory(lua/luajit)
+    include(cmake/BuildLuaJIT.cmake)
     add_subdirectory(lua/tolua)
     add_subdirectory(lua/lua-cjson)
     configure_target_outdir(luajit)

@@ -16,5 +16,5 @@ add_library(${target_name} STATIC
   ${${target_name}_src}
 )
 
-target_include_directories(${target_name} PRIVATE ../luajit/include)
+target_link_libraries(${target_name} PUBLIC luajit)
 target_include_directories(${target_name} PUBLIC .)
