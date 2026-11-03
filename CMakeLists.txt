@@ -234,7 +234,13 @@ endif()
 if(BUILD_EXT_OPENSSL)
     add_subdirectory(openssl)
     if(ANDROID OR LINUX)
-        target_link_libraries(OpenSSL::SSL INTERFACE OpenSSL::Crypto)
+        # The source driver already publishes this dependency. For the legacy
+        # Linux import, append it without cross-directory ::@ scope markers:
+        # curl exports imported targets into configure-time try_compile probes.
+        get_target_property(openssl_ssl_dependencies OpenSSL::SSL INTERFACE_LINK_LIBRARIES)
+        if(NOT "OpenSSL::Crypto" IN_LIST openssl_ssl_dependencies)
+            set_property(TARGET OpenSSL::SSL APPEND PROPERTY INTERFACE_LINK_LIBRARIES OpenSSL::Crypto)
+        endif()
         target_link_libraries(external OpenSSL::SSL)
     else()
         target_link_libraries(external OpenSSL::Crypto OpenSSL::SSL)

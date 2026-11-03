@@ -1,11 +1,75 @@
 include_guard(GLOBAL)
 
+function(ossl_android_api out)
+    # The NDK's default legacy toolchain sets CMAKE_SYSTEM_VERSION=1 as a
+    # sentinel; the effective (possibly ABI-adjusted) API is recorded separately.
+    if(ANDROID_PLATFORM_LEVEL)
+        set(api "${ANDROID_PLATFORM_LEVEL}")
+    elseif(ANDROID_NATIVE_API_LEVEL)
+        set(api "${ANDROID_NATIVE_API_LEVEL}")
+    else()
+        set(api "${CMAKE_SYSTEM_VERSION}")
+    endif()
+    if(NOT api MATCHES "^[0-9]+$" OR api LESS 21)
+        message(FATAL_ERROR "OpenSSL requires the parent's effective Android API >=21")
+    endif()
+    foreach(other "${ANDROID_PLATFORM_LEVEL}" "${ANDROID_NATIVE_API_LEVEL}")
+        if(other AND NOT other STREQUAL api)
+            message(FATAL_ERROR "Parent Android toolchain API values disagree")
+        endif()
+    endforeach()
+    if(CMAKE_SYSTEM_VERSION GREATER 1 AND NOT CMAKE_SYSTEM_VERSION STREQUAL api)
+        message(FATAL_ERROR "Parent CMake and NDK Android API values disagree")
+    endif()
+    set(${out} "${api}" PARENT_SCOPE)
+endfunction()
+
 # Values also cross cmd.exe and the generated input file. Spaces are supported;
 # shell metacharacters and CMake list delimiters are deliberately rejected.
 function(ossl_safe_value value)
     if("${value}" MATCHES "[\r\n\"%;!&|<>^]" OR "${value}" MATCHES "\\]===\\]")
         message(FATAL_ERROR "Unsupported character in OpenSSL input: ${value}")
     endif()
+endfunction()
+
+# Resolve the existing prefix as well, so a not-yet-created child of a
+# junction/symlink cannot bypass source/output overlap checks.
+function(ossl_resolve_path path out)
+    if(NOT IS_ABSOLUTE "${path}")
+        message(FATAL_ERROR "OpenSSL paths must be absolute: ${path}")
+    endif()
+    set(prefix "${path}")
+    cmake_path(NORMAL_PATH prefix)
+    set(suffix "")
+    while(NOT EXISTS "${prefix}")
+        get_filename_component(name "${prefix}" NAME)
+        get_filename_component(parent "${prefix}" DIRECTORY)
+        if(parent STREQUAL prefix OR name STREQUAL "")
+            message(FATAL_ERROR "Cannot resolve an existing parent for OpenSSL path: ${path}")
+        endif()
+        set(suffix "/${name}${suffix}")
+        set(prefix "${parent}")
+    endwhile()
+    file(REAL_PATH "${prefix}" resolved)
+    set(resolved "${resolved}${suffix}")
+    cmake_path(NORMAL_PATH resolved)
+    set(${out} "${resolved}" PARENT_SCOPE)
+endfunction()
+
+function(ossl_directory_inventory root out_hash)
+    file(GLOB_RECURSE entries LIST_DIRECTORIES TRUE RELATIVE "${root}" "${root}/*" "${root}/.*")
+    list(SORT entries)
+    set(inventory "")
+    foreach(entry IN LISTS entries)
+        if(IS_SYMLINK "${root}/${entry}")
+            message(FATAL_ERROR "OpenSSL input must not contain symlinks: ${entry}")
+        endif()
+        if(IS_DIRECTORY "${root}/${entry}")
+            string(APPEND inventory "${entry}\n")
+        endif()
+    endforeach()
+    string(SHA256 hash "${inventory}")
+    set(${out_hash} "${hash}" PARENT_SCOPE)
 endfunction()
 
 function(ossl_inventory root out_hash out_text)
@@ -29,9 +93,15 @@ function(ossl_inventory root out_hash out_text)
 endfunction()
 
 function(ossl_adapter_hash out_hash)
-    file(GLOB files "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/*.cmake" "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/*.ps1")
+    file(GLOB files "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/*.cmake" "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/*.ps1"
+        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/*.pl")
     list(APPEND files "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../source-manifest.json"
-        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../../cmake/BuildOpenSSL.cmake")
+        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../prune-manifest.json"
+        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../../cmake/BuildOpenSSL.cmake"
+        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../../cmake/OpenSSLConsumers.cmake"
+        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../../cmake/PublishOpenSSL.cmake")
+    file(GLOB portable_adapters "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../../cmake/*OpenSSLPortable*.cmake")
+    list(APPEND files ${portable_adapters})
     list(SORT files)
     set(identity "")
     foreach(file IN LISTS files)

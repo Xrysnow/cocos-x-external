@@ -1,4 +1,7 @@
-if(WIN32 AND NOT ANDROID)
+if(ANDROID OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    include("${CMAKE_CURRENT_LIST_DIR}/../cmake/OpenSSLPortableConsumers.cmake")
+    return()
+elseif(WIN32)
     include("${CMAKE_CURRENT_LIST_DIR}/../cmake/OpenSSLConsumers.cmake")
     return()
 endif()

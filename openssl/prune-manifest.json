@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "version": "3.5.9",
+  "archive_sha256": "603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a",
+  "full_inventory_sha256": "d31549aecd20f6f1300e7ca20ef1feb4874b04822758f497b817e2fe7cd17af6",
+  "full_source_sha256": "d31549aecd20f6f1300e7ca20ef1feb4874b04822758f497b817e2fe7cd17af6",
+  "pruned_source_sha256": "27be391ce369f7e3ca192eebee12027ffc0fd68fb425abeac35e74621f34f096",
+  "full_directories_sha256": "3c12a2fc81228c97ae817c82aa5d5d218c7bc136d891f7ea5756694806c894e3",
+  "pruned_directories_sha256": "2449fba5395d06311003f6d4c3e5ad1d6f0b8b59f8c3b8807935ec3434b803fa",
+  "full_files": 5779,
+  "pruned_files": 3555,
+  "full_bytes": 131230833,
+  "pruned_bytes": 41855839,
+  "excluded_directories": ["test", "demos", "engines", ".ctags.d"],
+  "excluded_empty_directories": [
+    "cloudflare-quiche", "oqs-provider", "pkcs11-provider", "python-ecdsa",
+    "tlsfuzzer", "tlslite-ng", "wycheproof"
+  ],
+  "required_options": ["no-tests", "no-demos", "no-engine"],
+  "retained_directories": ["apps", "doc", "fuzz", "tools", "providers", "ssl/quic"],
+  "policy": "Local fixed input only. Exclusions apply to a new snapshot, never to the original source or archive. All retained upstream bytes, build.info files and licenses are unchanged. The full source remains available for official tests. Additional exclusions require a new review and manifest."
+}

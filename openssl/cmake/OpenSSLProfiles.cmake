@@ -1,7 +1,6 @@
 include_guard(GLOBAL)
 
-# Fixed, reviewed Configure options. Source pruning and algorithm/provider
-# removal are separate work; every profile still requires the full snapshot.
+# Feature selection is independent of the physical source layout.
 function(ossl_profile_options profile out)
     set(options)
     if(profile STREQUAL "peripheral-pki" OR profile STREQUAL "peripheral")
@@ -11,6 +10,17 @@ function(ossl_profile_options profile out)
     endif()
     if(profile STREQUAL "peripheral")
         list(APPEND options no-dtls no-srtp no-quic no-engine no-async no-nextprotoneg no-comp)
+    endif()
+    set(${out} "${options}" PARENT_SCOPE)
+endfunction()
+
+function(ossl_configure_options profile build_tests build_demos out)
+    ossl_profile_options("${profile}" options)
+    if(NOT build_tests)
+        list(APPEND options no-tests)
+    endif()
+    if(NOT build_demos)
+        list(APPEND options no-demos)
     endif()
     set(${out} "${options}" PARENT_SCOPE)
 endfunction()

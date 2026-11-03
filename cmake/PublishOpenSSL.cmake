@@ -5,7 +5,7 @@ if(NOT DEFINED INPUT OR NOT EXISTS "${INPUT}" OR NOT DEFINED DESTINATION OR NOT 
 endif()
 include("${INPUT}")
 ossl_safe_value("${DESTINATION}")
-cmake_path(NORMAL_PATH DESTINATION)
+ossl_resolve_path("${DESTINATION}" DESTINATION)
 foreach(protected "${OSSL_ROOT}" "${OSSL_SOURCE}")
     cmake_path(IS_PREFIX protected "${DESTINATION}" NORMALIZE overlaps)
     cmake_path(IS_PREFIX DESTINATION "${protected}" NORMALIZE contains_input)
