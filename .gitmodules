@@ -20,3 +20,6 @@
 	path = LuaJIT
 	url = https://github.com/LuaJIT/LuaJIT.git
 	branch = v2.1
+[submodule "ffmpeg-prebuilt"]
+	path = ffmpeg-prebuilt
+	url = https://github.com/Xrysnow/ffmpeg-prebuilt.git
