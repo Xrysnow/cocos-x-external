@@ -1,5 +1,10 @@
 project(external)
 
+# Preserve the existing defaults for standalone third-party targets.
+# Engine-owned targets such as gfx declare their C++20 requirement separately.
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_OBJCXX_STANDARD 17)
+
 option(BUILD_EXT_BOX2D "Build with internal Box2D support" ON)
 option(BUILD_EXT_CHIPMUNK "Build with internal chipmunk support" ON)
 option(BUILD_EXT_FREETYPE "Build with internal freetype support" ON)
