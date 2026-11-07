@@ -5,7 +5,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2012-2023 HALX99
+Copyright (c) 2012-2025 HALX99
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -36,10 +36,10 @@ SOFTWARE.
 #  include "yasio/xxsocket.hpp"
 #endif
 
-#include "yasio/detail/utils.hpp"
+#include "yasio/tlx/chrono.hpp"
 
 #if !defined(_WIN32)
-#  include "yasio/detail/ifaddrs.hpp"
+#  include "yasio/impl/ifaddrs.hpp"
 #endif
 
 // For apple bsd socket implemention
@@ -69,19 +69,21 @@ namespace ip
 {
 namespace compat
 {
-#  include "yasio/detail/inet_compat.inl"
+#  include "yasio/impl/inet_ntop.hpp"
 } // namespace compat
 } // namespace ip
 } // namespace inet
 } // namespace yasio
 #endif
 
+#define YASIO_NO_ERROR "No error."
+#define YASIO_NO_ERROR_SZ (sizeof(YASIO_NO_ERROR))
+
 namespace yasio
 {
 YASIO__NS_INLINE
 namespace inet
 {
-
 int xxsocket::xpconnect(const char* hostname, u_short port, u_short local_port)
 {
   auto flags = getipsv();
@@ -89,28 +91,25 @@ int xxsocket::xpconnect(const char* hostname, u_short port, u_short local_port)
   int error = -1;
 
   xxsocket::resolve_i(
-      [&](const endpoint& ep) {
-        switch (ep.af())
+      [&](const addrinfo* ai) {
+        switch (ai->ai_family)
         {
           case AF_INET:
             if (flags & ipsv_ipv4)
-            {
-              error = pconnect(ep, local_port);
-            }
+              error = pconnect(ip::endpoint{ai}, local_port);
             else if (flags & ipsv_ipv6)
-            {
-              xxsocket::resolve_i([&](const endpoint& ep6) { return 0 == (error = pconnect(ep6, local_port)); }, hostname, port, AF_INET6, AI_V4MAPPED);
-            }
+              xxsocket::resolve_i([&](const addrinfo* ai6) { return 0 == (error = pconnect(ip::endpoint{ai6}, local_port)); }, hostname, port, AF_INET6,
+                                  AI_V4MAPPED);
             break;
           case AF_INET6:
             if (flags & ipsv_ipv6)
-              error = pconnect(ep, local_port);
+              error = pconnect(ip::endpoint{ai}, local_port);
             break;
         }
 
         return error == 0;
       },
-      hostname, port, AF_UNSPEC, AI_ALL);
+      hostname, port, AF_UNSPEC, 0);
 
   return error;
 }
@@ -120,27 +119,27 @@ int xxsocket::xpconnect_n(const char* hostname, u_short port, const std::chrono:
   auto flags = getipsv();
   int error  = -1;
   xxsocket::resolve_i(
-      [&](const endpoint& ep) {
-        switch (ep.af())
+      [&](const addrinfo* ai) {
+        switch (ai->ai_family)
         {
           case AF_INET:
             if (flags & ipsv_ipv4)
-              error = pconnect_n(ep, wtimeout, local_port);
+              error = pconnect_n(ip::endpoint{ai}, wtimeout, local_port);
             else if (flags & ipsv_ipv6)
             {
-              xxsocket::resolve_i([&](const endpoint& ep6) { return 0 == (error = pconnect_n(ep6, wtimeout, local_port)); }, hostname, port, AF_INET6,
-                                  AI_V4MAPPED);
+              xxsocket::resolve_i([&](const addrinfo* ai6) { return 0 == (error = pconnect_n(ip::endpoint{ai6}, wtimeout, local_port)); }, hostname, port,
+                                  AF_INET6, AI_V4MAPPED);
             }
             break;
           case AF_INET6:
             if (flags & ipsv_ipv6)
-              error = pconnect_n(ep, wtimeout, local_port);
+              error = pconnect_n(ip::endpoint{ai}, wtimeout, local_port);
             break;
         }
 
         return error == 0;
       },
-      hostname, port, AF_UNSPEC, AI_ALL);
+      hostname, port, AF_UNSPEC, 0);
 
   return error;
 }
@@ -148,14 +147,14 @@ int xxsocket::xpconnect_n(const char* hostname, u_short port, const std::chrono:
 int xxsocket::pconnect(const char* hostname, u_short port, u_short local_port)
 {
   int error = -1;
-  xxsocket::resolve_i([&](const endpoint& ep) { return 0 == (error = pconnect(ep, local_port)); }, hostname, port);
+  xxsocket::resolve_i([&](const addrinfo* ai) { return 0 == (error = pconnect(ip::endpoint{ai}, local_port)); }, hostname, port);
   return error;
 }
 
 int xxsocket::pconnect_n(const char* hostname, u_short port, const std::chrono::microseconds& wtimeout, u_short local_port)
 {
   int error = -1;
-  xxsocket::resolve_i([&](const endpoint& ep) { return 0 == (error = pconnect_n(ep, wtimeout, local_port)); }, hostname, port);
+  xxsocket::resolve_i([&](const addrinfo* ai) { return 0 == (error = pconnect_n(ip::endpoint{ai}, wtimeout, local_port)); }, hostname, port);
   return error;
 }
 
@@ -163,8 +162,8 @@ int xxsocket::pconnect_n(const char* hostname, u_short port, u_short local_port)
 {
   int error = -1;
   xxsocket::resolve_i(
-      [&](const endpoint& ep) {
-        (error = pconnect_n(ep, local_port));
+      [&](const addrinfo* ai) {
+        (error = pconnect_n(ip::endpoint{ai}, local_port));
         return true;
       },
       hostname, port);
@@ -210,7 +209,7 @@ int xxsocket::pserve(const endpoint& ep)
   if (!this->reopen(ep.af()))
     return -1;
 
-  set_optval(SOL_SOCKET, SO_REUSEADDR, 1);
+  this->reuse_address(true);
 
   int n = this->bind(ep);
   if (n != 0)
@@ -219,20 +218,67 @@ int xxsocket::pserve(const endpoint& ep)
   return this->listen();
 }
 
+bool xxsocket::popen(int af, int type, int protocol)
+{
+#if defined(_WIN32)
+  bool ok = this->open_ex(af, type, protocol);
+#else
+  bool ok = this->open(af, type, protocol);
+#endif
+  if (ok)
+    xxsocket::poptions(this->fd);
+  return ok;
+}
+
+int xxsocket::paccept(socket_native_type& new_sock)
+{
+  for (;;)
+  {
+    // Accept the waiting connection.
+    new_sock = ::accept(this->fd, nullptr, nullptr);
+
+    // Check if operation succeeded.
+    if (new_sock != invalid_socket)
+    {
+      xxsocket::poptions(new_sock);
+      return 0;
+    }
+
+    auto error = get_last_errno();
+    // Retry operation if interrupted by signal.
+    if (error == EINTR)
+      continue;
+
+    /* Operation failed.
+    ** The error maybe EWOULDBLOCK, EAGAIN, ECONNABORTED, EPROTO,
+    ** Simply Fall through to retry operation.
+    */
+    return error;
+  }
+}
+
+void xxsocket::poptions(socket_native_type sockfd)
+{
+  xxsocket::set_nonblocking(sockfd, true);
+#if defined(SO_NOSIGPIPE) // BSD-like OS can set socket ignore PIPE
+  xxsocket::set_optval(sockfd, SOL_SOCKET, SO_NOSIGPIPE, (int)1);
+#endif
+}
+
 int xxsocket::resolve(std::vector<endpoint>& endpoints, const char* hostname, unsigned short port, int socktype)
 {
   return resolve_i(
-      [&](const endpoint& ep) {
-        endpoints.push_back(ep);
+      [&](const addrinfo* ai) {
+        endpoints.emplace_back(ai);
         return false;
       },
-      hostname, port, AF_UNSPEC, AI_ALL, socktype);
+      hostname, port, AF_UNSPEC, 0, socktype);
 }
 int xxsocket::resolve_v4(std::vector<endpoint>& endpoints, const char* hostname, unsigned short port, int socktype)
 {
   return resolve_i(
-      [&](const endpoint& ep) {
-        endpoints.push_back(ep);
+      [&](const addrinfo* ai) {
+        endpoints.emplace_back(ai);
         return false;
       },
       hostname, port, AF_INET, 0, socktype);
@@ -240,29 +286,53 @@ int xxsocket::resolve_v4(std::vector<endpoint>& endpoints, const char* hostname,
 int xxsocket::resolve_v6(std::vector<endpoint>& endpoints, const char* hostname, unsigned short port, int socktype)
 {
   return resolve_i(
-      [&](const endpoint& ep) {
-        endpoints.push_back(ep);
+      [&](const addrinfo* ai) {
+        endpoints.emplace_back(ai);
         return false;
       },
       hostname, port, AF_INET6, 0, socktype);
 }
-int xxsocket::resolve_v4to6(std::vector<endpoint>& endpoints, const char* hostname, unsigned short port, int socktype)
-{
-  return xxsocket::resolve_i(
-      [&](const endpoint& ep) {
-        endpoints.push_back(ep);
-        return false;
-      },
-      hostname, port, AF_INET6, AI_V4MAPPED, socktype);
-}
 int xxsocket::resolve_tov6(std::vector<endpoint>& endpoints, const char* hostname, unsigned short port, int socktype)
 {
+#if !defined(__ANDROID__) && (!YASIO__OS_BSD_LIKE || defined(__APPLE__))
   return resolve_i(
-      [&](const endpoint& ep) {
-        endpoints.push_back(ep);
+      [&](const addrinfo* ai) {
+        endpoints.emplace_back(ai);
         return false;
       },
       hostname, port, AF_INET6, AI_ALL | AI_V4MAPPED, socktype);
+#else
+  return resolve_i(
+      [&](const addrinfo* ai) {
+        if (ai->ai_family == AF_INET)
+          endpoints.emplace_back(endpoint(ai).to_v4mapped());
+        else
+          endpoints.emplace_back(ai);
+        return false;
+      },
+      hostname, port, AF_UNSPEC, 0, socktype);
+#endif
+}
+int xxsocket::resolve_v4to6(std::vector<endpoint>& endpoints, const char* hostname, unsigned short port, int socktype)
+{
+#if !defined(__ANDROID__) && (!YASIO__OS_BSD_LIKE || defined(__APPLE__))
+  return xxsocket::resolve_i(
+      [&](const addrinfo* ai) {
+        endpoint ep{ai};
+        if (IN6_IS_ADDR_V4MAPPED(&ep.in6_.sin6_addr))
+          endpoints.emplace_back(std::forward<endpoint>(ep));
+        return false;
+      },
+      hostname, port, AF_INET6, AI_ALL | AI_V4MAPPED, socktype);
+#else
+  return resolve_i(
+      [&](const addrinfo* ai) {
+        if (ai->ai_family == AF_INET)
+          endpoints.emplace_back(endpoint(ai).to_v4mapped());
+        return false;
+      },
+      hostname, port, AF_UNSPEC, 0, socktype);
+#endif
 }
 
 int xxsocket::getipsv(void)
@@ -648,9 +718,9 @@ int xxsocket::send_n(socket_native_type s, const void* buf, int len, std::chrono
     if (n == -1 && xxsocket::not_send_error(error))
     {
       // Wait upto <timeout> for the blocking to subside.
-      auto start    = yasio::highp_clock();
+      auto start    = tlx::highp_clock();
       int const rtn = handle_write_ready(s, wtimeout);
-      wtimeout -= std::chrono::microseconds(yasio::highp_clock() - start);
+      wtimeout -= std::chrono::microseconds(tlx::highp_clock() - start);
 
       // Did select() succeed?
       if (rtn != -1 && wtimeout.count() > 0)
@@ -698,9 +768,9 @@ int xxsocket::recv_n(socket_native_type s, void* buf, int len, std::chrono::micr
     if (n == -1 && xxsocket::not_recv_error(error))
     {
       // Wait upto <timeout> for the blocking to subside.
-      auto start    = yasio::highp_clock();
+      auto start    = tlx::highp_clock();
       int const rtn = handle_read_ready(s, wtimeout);
-      wtimeout -= std::chrono::microseconds(yasio::highp_clock() - start);
+      wtimeout -= std::chrono::microseconds(tlx::highp_clock() - start);
 
       // Did select() succeed?
       if (rtn != -1 && wtimeout.count() > 0)
@@ -764,9 +834,9 @@ int xxsocket::select(socket_native_type s, fd_set* readfds, fd_set* writefds, fd
 
     timeval waitd_tv = {static_cast<decltype(timeval::tv_sec)>(wtimeout.count() / std::micro::den),
                         static_cast<decltype(timeval::tv_usec)>(wtimeout.count() % std::micro::den)};
-    long long start  = highp_clock();
+    long long start  = tlx::highp_clock();
     n                = ::select(static_cast<int>(s + 1), readfds, writefds, exceptfds, &waitd_tv);
-    wtimeout -= std::chrono::microseconds(highp_clock() - start);
+    wtimeout -= std::chrono::microseconds(tlx::highp_clock() - start);
 
     if (n < 0 && xxsocket::get_last_errno() == EINTR)
     {
@@ -860,8 +930,11 @@ void xxsocket::close(int shut_how)
 {
   if (is_open())
   {
+#if !defined(__EMSCRIPTEN__)
     if (shut_how >= 0)
       ::shutdown(this->fd, shut_how);
+#endif
+    set_nonblocking(false);
     ::closesocket(this->fd);
     this->fd = invalid_socket;
   }
@@ -871,7 +944,7 @@ unsigned int xxsocket::tcp_rtt() const { return xxsocket::tcp_rtt(this->fd); }
 unsigned int xxsocket::tcp_rtt(socket_native_type s)
 {
 #if defined(_WIN32)
-#  if defined(NTDDI_WIN10_RS2) && NTDDI_VERSION >= NTDDI_WIN10_RS2
+#  if YASIO__OS_NT10_RS2
   TCP_INFO_v0 info;
   DWORD tcpi_ver = 0, bytes_transferred = 0;
   int status = WSAIoctl(s, SIO_TCP_INFO,
@@ -929,26 +1002,51 @@ bool xxsocket::not_recv_error(int error) { return (error == EWOULDBLOCK || error
 
 const char* xxsocket::strerror(int error)
 {
+  if (error != 0)
+  {
 #if defined(_WIN32)
-  static char error_msg[256];
-  return xxsocket::strerror_r(error, error_msg, sizeof(error_msg));
+    static char error_msg[256];
+    return xxsocket::strerror_r(error, error_msg, sizeof(error_msg));
 #else
-  return ::strerror(error);
+    return ::strerror(error);
 #endif
+  }
+  return YASIO_NO_ERROR;
 }
 
 const char* xxsocket::strerror_r(int error, char* buf, size_t buflen)
 {
+  if (error != 0)
+  {
 #if defined(_WIN32)
-  ZeroMemory(buf, buflen);
-  ::FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK /* remove line-end charactors \r\n */, NULL,
-                   error, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), // english language
-                   buf, static_cast<DWORD>(buflen), nullptr);
+    ZeroMemory(buf, buflen);
+    ::FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK /* remove line-end charactors \r\n */, NULL,
+                     error, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), // english language
+                     buf, static_cast<DWORD>(buflen), nullptr);
 
-  return buf;
+    return buf;
 #else
-  (void)::strerror_r(error, buf, buflen);
+    // XSI-compliant return int not const char*, refer to: https://linux.die.net/man/3/strerror_r
+    auto YASIO__UNUSED ret = ::strerror_r(error, buf, buflen);
+    return buf;
+#endif
+  }
+  strncpy(buf, YASIO_NO_ERROR, (std::min)(YASIO_NO_ERROR_SZ, buflen));
   return buf;
+}
+
+void xxsocket::update_connect_context(socket_native_type s, std::error_code& ec)
+{
+#if defined(_WIN32)
+  if (!ec)
+  {
+    // Need to set the SO_UPDATE_CONNECT_CONTEXT option so that getsockname
+    // and getpeername will work on the connected socket.
+    // socket_ops::state_type state        = 0;
+    const int so_update_connect_context = 0x7010;
+    if (xxsocket::set_optval(s, SOL_SOCKET, so_update_connect_context, nullptr, 0) < 0)
+      ec = std::error_code(::WSAGetLastError(), std::system_category());
+  }
 #endif
 }
 
@@ -976,7 +1074,11 @@ struct ws2_32_gc {
   ~ws2_32_gc(void) { WSACleanup(); }
 };
 
+#  pragma warning(push)
+#  pragma warning(disable : 4073)
+#  pragma init_seg(lib)
 ws2_32_gc __ws32_lib_gc;
+#  pragma warning(pop)
 } // namespace
 #endif
 

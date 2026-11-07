@@ -5,7 +5,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2012-2023 HALX99
+Copyright (c) 2012-2025 HALX99
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,10 @@ SOFTWARE.
 #  include <sdkddkver.h>
 #endif
 
+#if defined(__linux__)
+#  include <linux/version.h>
+#endif
+
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #  define snprintf sprintf_s
 #endif
@@ -44,12 +48,10 @@ SOFTWARE.
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 #  define YASIO__HAS_CXX11 1
 #  define YASIO__NS_INLINE inline
-#  define YASIO__CONSTEXPR constexpr
 #  define YASIO__NOEXCEPT noexcept
 #else
 #  define YASIO__HAS_CXX11 0
 #  define YASIO__NS_INLINE
-#  define YASIO__CONSTEXPR const
 #  define YASIO__NOEXCEPT throw()
 #endif
 
@@ -72,6 +74,12 @@ SOFTWARE.
 #endif   // C++17 features check
 #if !defined(YASIO__HAS_CXX17)
 #  define YASIO__HAS_CXX17 0
+#endif
+
+#if YASIO__HAS_CXX17
+#  define YASIO__CONSTEXPR constexpr
+#else
+#  define YASIO__CONSTEXPR
 #endif
 
 // Tests whether compiler has c++20 support
@@ -111,6 +119,62 @@ SOFTWARE.
 #  define YASIO__OS_BSD_LIKE 0
 #endif
 
+#if !defined(_WIN32) || (defined(NTDDI_VERSION) && NTDDI_VERSION >= NTDDI_VISTA) || (defined(_WIN32_WINNT) && _WIN32_WINNT >= 0x0600)
+#  define YASIO__OS_NT6 1
+#else
+#  define YASIO__OS_NT6 0
+#endif
+
+/// Tests multiplex io model of current OS
+
+// poll
+#if YASIO__OS_NT6
+#  define YASIO__HAS_POLL 1
+#else
+#  define YASIO__HAS_POLL 0
+#endif
+
+// ppoll
+#if defined(__linux__) && !defined(__ANDROID__) || (defined(__ANDROID_API__) && __ANDROID_API__ >= 21)
+#  define YASIO__HAS_PPOLL 1
+#else
+#  define YASIO__HAS_PPOLL 0
+#endif
+
+// iocp
+#if defined(_WIN32)
+#  define YASIO__HAS_IOCP 1
+#else
+#  define YASIO__HAS_IOCP 0
+#endif
+
+// epoll
+#if defined(__linux__)
+#  define YASIO__HAS_EPOLL 1
+#  if !defined(__ANDROID__) && (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0))
+#    define YASIO__HAS_EPOLL_PWAIT2 1
+#  else
+#    define YASIO__HAS_EPOLL_PWAIT2 0
+#  endif
+#else
+#  define YASIO__HAS_EPOLL 0
+#  define YASIO__HAS_EPOLL_PWAIT2 0
+#endif
+
+// kequeue
+#if YASIO__OS_BSD_LIKE
+#  define YASIO__HAS_KQUEUE 1
+#else
+#  define YASIO__HAS_KQUEUE 0
+#endif
+
+// evport
+#if defined(__sun)
+#  define YASIO__HAS_EVPORT 1
+#else
+#  define YASIO__HAS_EVPORT 0
+#endif
+
 // Test whether sockaddr has member 'sa_len'
 // see also: https://github.com/freebsd/freebsd-src/blob/main/sys/sys/socket.h#L329
 #if YASIO__OS_BSD_LIKE
@@ -119,10 +183,22 @@ SOFTWARE.
 #  define YASIO__HAS_SA_LEN 0
 #endif
 
-#if !defined(_WIN32) || defined(NTDDI_VISTA)
+#if YASIO__OS_NT6
 #  define YASIO__HAS_NTOP 1
 #else
 #  define YASIO__HAS_NTOP 0
+#endif
+
+#if defined(NTDDI_WIN10_RS2) && NTDDI_VERSION >= NTDDI_WIN10_RS2
+#  define YASIO__OS_NT10_RS2 1
+#else
+#  define YASIO__OS_NT10_RS2 0
+#endif
+
+#if defined(_WIN32) && (!defined(WINAPI_FAMILY) || (WINAPI_FAMILY != WINAPI_FAMILY_APP)) && !defined(__MINGW64__) && !defined(__MINGW32__)
+#  define YASIO__HAS_WIN32_TIMEAPI 1
+#else
+#  define YASIO__HAS_WIN32_TIMEAPI 0
 #endif
 
 // 64bits Sense Macros
@@ -183,18 +259,7 @@ SOFTWARE.
 
 #define YASIO__STD ::std::
 
-#if YASIO__HAS_CXX14
-namespace cxx14
-{
-using namespace std;
-};
-#endif
-
-#if YASIO__HAS_CXX17
-namespace cxx17
-{
-using namespace std;
-};
-#endif
+// The yasio is the original tlx provider
+#define _TLX ::tlx::
 
 #endif

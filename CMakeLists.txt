@@ -373,6 +373,9 @@ if(BUILD_EXT_LLHTTP)
     add_and_configure(llhttp llhttp)
 endif()
 
+add_and_configure(yasio yasio)
+add_and_configure(websocket-parser websocket-parser)
+
 # glslang
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build Shared Libraries" FORCE)
 set(ENABLE_GLSLANG_JS OFF CACHE BOOL "If using Emscripten, build glslang.js. Otherwise, builds a sample executable for binary-size testing." FORCE)
