@@ -338,6 +338,12 @@ set(ALSOFT_UTILS OFF CACHE BOOL "Build utility program" FORCE)
 set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build example programs" FORCE)
 set(ALSOFT_INSTALL OFF CACHE BOOL "Install main library" FORCE)
 add_subdirectory(openal EXCLUDE_FROM_ALL)
+# Match upstream OpenAL 681d049: function-effect diagnostics are warnings.
+if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"
+        AND HAVE_WFUNCTION_EFFECTS AND NOT ALSOFT_WERROR)
+    target_compile_options(OpenAL PRIVATE
+        "$<$<COMPILE_LANGUAGE:CXX>:-Wno-error=function-effects>")
+endif()
 configure_target_outdir(alsoft.common)
 configure_target_outdir(alsoft.default_hrtf_data)
 configure_target_outdir(alsoft.fmt)
