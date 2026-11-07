@@ -322,6 +322,12 @@ target_link_libraries(external CURL::libcurl)
 # endif()
 
 # openal-soft(LGPL 2.1)
+if(ANDROID)
+    # Vendored Oboe 1.11.0 library subset, google/oboe b115f47593969fd67a21e9f63640ffef749b5067.
+    set(OBOE_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/oboe" CACHE STRING "Source directory for Oboe." FORCE)
+    set(ALSOFT_BACKEND_OBOE ON CACHE BOOL "Enable Oboe backend" FORCE)
+    set(ALSOFT_REQUIRE_OBOE ON CACHE BOOL "Require Oboe backend" FORCE)
+endif()
 set(ALSOFT_DLOPEN OFF CACHE BOOL "Check for the dlopen API for loading optional libs" FORCE)
 set(ALSOFT_UTILS OFF CACHE BOOL "Build utility program" FORCE)
 set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build example programs" FORCE)
