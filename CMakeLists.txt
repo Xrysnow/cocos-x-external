@@ -1,7 +1,6 @@
 project(external)
 
-# Preserve the existing defaults for standalone third-party targets.
-# Engine-owned targets such as gfx declare their C++20 requirement separately.
+# Preserve the existing language standards for third-party targets.
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_OBJCXX_STANDARD 17)
 
@@ -414,10 +413,6 @@ if(USE_JOB_SYSTEM_TBB)
     target_link_libraries(external tbb_static tbbmalloc_static tbbmalloc_proxy_static)
 endif()
 
-# gfx
-add_subdirectory(gfx)
-target_link_libraries(external ext_gfx)
-
 set(libs_to_config
     SPVRemapper
     SPIRV
@@ -434,7 +429,6 @@ set(libs_to_config
     spirv-cross-cpp
     spirv-cross-glsl
     spirv-cross-core
-    ext_gfx
 )
 
 if(USE_JOB_SYSTEM_TBB)
