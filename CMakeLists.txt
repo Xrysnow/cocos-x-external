@@ -3,6 +3,9 @@ project(external)
 # Preserve the existing language standards for third-party targets.
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_OBJCXX_STANDARD 17)
+# Dependency library types are independent of the core DLL option. Keep this
+# directory-local so adding cocos-x never rewrites its parent's cache setting.
+set(BUILD_SHARED_LIBS OFF)
 
 option(BUILD_EXT_BOX2D "Build with internal Box2D support" ON)
 option(BUILD_EXT_CHIPMUNK "Build with internal chipmunk support" ON)
@@ -29,7 +32,7 @@ option(BUILD_EXT_UNZIP "Build with internal unzip support" ON)
 option(BUILD_EXT_ASTC "Build with internal ASTC support" ON)
 option(BUILD_EXT_LLHTTP "Build with lhttp support" ON)
 
-add_library(external empty.cpp)
+add_library(external STATIC empty.cpp)
 
 # by default, enable ios,macOS openal-soft framework for legal license LGPL-2.1
 option(ALSOFT_OSX_FRAMEWORK "" ON)
@@ -387,7 +390,6 @@ add_and_configure(yasio yasio)
 add_and_configure(websocket-parser websocket-parser)
 
 # glslang
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build Shared Libraries" FORCE)
 set(ENABLE_GLSLANG_JS OFF CACHE BOOL "If using Emscripten, build glslang.js. Otherwise, builds a sample executable for binary-size testing." FORCE)
 set(BUILD_EXTERNAL OFF CACHE BOOL "Build external dependencies in /External" FORCE)
 set(ENABLE_GLSLANG_BINARIES OFF CACHE BOOL "Builds glslang and spirv-remap" FORCE)
