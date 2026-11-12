@@ -16,7 +16,7 @@ Perl and the target platform's build tools must be available locally.
 
 | Target | Toolchain and output |
 | --- | --- |
-| Windows | Parent Visual Studio MSVC toolchain, Win32/x64/ARM64; native Perl and nmake (or explicitly selected jom). Project NASM is required for x86/x64. Builds shared DLLs with dynamic CRT. |
+| Windows | Parent Visual Studio MSVC toolchain, Win32/x64/ARM64; native Perl and nmake (or explicitly selected jom). Project NASM is required for x86/x64. Builds shared DLLs with dynamic CRT and `no-module`; default and legacy providers are built into libcrypto. |
 | Linux | Parent compiler, make, ar, ranlib, nm and readelf; x86_64, aarch64, i686 or armv7. Builds static PIC libraries and retains the parent's cross-compilation target, sysroot and flags. |
 | Android | NDK arm64-v8a, x86_64, armeabi-v7a or x86; static PIC libraries. Windows hosts require the configured MSYS/Perl/GNU make toolchain. |
 | macOS/iOS/tvOS | Native Xcode tools, an explicit SDK, one architecture and deployment target; static PIC libraries. Device and simulator builds use separate target triples and build directories. |

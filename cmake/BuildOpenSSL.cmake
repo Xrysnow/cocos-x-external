@@ -24,6 +24,8 @@ function(cc_build_openssl)
     get_filename_component(cocos_default "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../.." ABSOLUTE)
     set(CC_OPENSSL_COCOS_ROOT "${cocos_default}")
     ossl_configure_options(peripheral OFF OFF options)
+    # Keep legacy built into libcrypto instead of shipping a provider DLL.
+    list(APPEND options no-module)
     if(NOT CMAKE_CONFIGURATION_TYPES STREQUAL "Debug;Release" AND NOT CMAKE_CONFIGURATION_TYPES STREQUAL "Debug")
         message(FATAL_ERROR "Set CMAKE_CONFIGURATION_TYPES=Debug;Release or Debug explicitly; no other configurations are prepared")
     endif()
@@ -110,7 +112,7 @@ function(cc_build_openssl)
     endif()
     set(byproducts "")
     foreach(file include/openssl/configuration.h include/openssl/opensslv.h lib/libcrypto.lib lib/libssl.lib
-        "bin/libcrypto-3${OSSL_DLL_SUFFIX}.dll" "bin/libssl-3${OSSL_DLL_SUFFIX}.dll" lib/ossl-modules/legacy.dll)
+        "bin/libcrypto-3${OSSL_DLL_SUFFIX}.dll" "bin/libssl-3${OSSL_DLL_SUFFIX}.dll")
         list(APPEND byproducts "${selected_stage}/${file}")
     endforeach()
     add_custom_target(cc_openssl_build

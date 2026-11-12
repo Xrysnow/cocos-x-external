@@ -11,4 +11,9 @@ for my $option (@ARGV) {
     exists $configdata::disabled{$1}
         or die "OpenSSL Configure did not disable $1\n";
 }
+# With no-module, legacy must remain enabled so it is built into libcrypto.
+if (grep { $_ eq 'no-module' } @ARGV) {
+    exists $configdata::disabled{legacy}
+        and die "The built-in legacy provider must remain enabled\n";
+}
 print "All requested OpenSSL disable options are present in configdata.pm\n";

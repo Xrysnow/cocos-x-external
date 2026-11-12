@@ -105,9 +105,7 @@ set(OPENSSL_MSVC_STATIC_RT OFF CACHE BOOL "Windows OpenSSL uses the dynamic CRT"
 ossl_source_version(OSSL_SOURCE_VERSION)
 set(OPENSSL_VERSION "${OSSL_SOURCE_VERSION}" CACHE INTERNAL "Selected OpenSSL version" FORCE)
 
-# The deployment helper copies modules after the per-configuration driver runs.
-set_property(TARGET OpenSSL::Crypto PROPERTY CC_RUNTIME_MODULES
-    "${selected_stage}/lib/ossl-modules/legacy.dll;ossl-modules/legacy.dll")
+# Both default and legacy providers are built into libcrypto.
 set(stages_json "{\n")
 foreach(name IN LISTS CMAKE_CONFIGURATION_TYPES)
     string(TOUPPER "${name}" config)
@@ -117,4 +115,4 @@ endforeach()
 file(WRITE "${CMAKE_BINARY_DIR}/openssl-stages.json"
     "${stages_json}  \"ConsumerId\": \"${consumer_id}\",\n  \"ProbeConfiguration\": \"${CMAKE_TRY_COMPILE_CONFIGURATION}\"\n}\n")
 ossl_add_configure_dependencies("${CMAKE_CURRENT_LIST_FILE}" "${publisher}")
-message(STATUS "OpenSSL consumers: ${OSSL_SOURCE_VERSION} ${OSSL_TARGET} shared; profile=peripheral; probe=${CMAKE_TRY_COMPILE_CONFIGURATION}; identity=${consumer_id}")
+message(STATUS "OpenSSL consumers: ${OSSL_SOURCE_VERSION} ${OSSL_TARGET} shared, default and legacy built-in; profile=peripheral; probe=${CMAKE_TRY_COMPILE_CONFIGURATION}; identity=${consumer_id}")
