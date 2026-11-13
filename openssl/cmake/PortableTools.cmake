@@ -224,7 +224,16 @@ function(ossl_portable_tools)
         separate_arguments(arguments UNIX_COMMAND "${flags}")
         list(APPEND compiler_flags ${arguments})
     endforeach()
-    list(APPEND environment "PATH=${path_prefix}:$ENV{PATH}")
+    if(mapping_FORMAT STREQUAL "MachO")
+        # Xcode prepends build-service paths when ZERO_CHECK reruns CMake.
+        # Use the selected tools and system utilities in a stable order so
+        # that identical Apple inputs retain their consumer identity.
+        get_filename_component(compiler_bin "${compiler}" DIRECTORY)
+        set(build_path "${path_prefix}:${compiler_bin}:/usr/bin:/bin:/usr/sbin:/sbin")
+    else()
+        set(build_path "${path_prefix}:$ENV{PATH}")
+    endif()
+    list(APPEND environment "PATH=${build_path}")
     set(records "")
     list(REMOVE_DUPLICATES tools)
     foreach(tool IN LISTS tools)
