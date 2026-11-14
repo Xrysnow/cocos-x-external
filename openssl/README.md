@@ -16,7 +16,7 @@ Perl and the target platform's build tools must be available locally.
 
 | Target | Toolchain and output |
 | --- | --- |
-| Windows | Parent Visual Studio MSVC toolchain, Win32/x64/ARM64; native Perl and nmake (or explicitly selected jom). Project NASM is required for x86/x64. Builds shared DLLs with dynamic CRT and `no-module`; default and legacy providers are built into libcrypto. |
+| Windows | Parent Visual Studio MSVC toolchain, Win32/x64/ARM64; native Perl and jom (automatically preferred when available, otherwise nmake). Project NASM is required for x86/x64. Builds shared DLLs with dynamic CRT and `no-module`; default and legacy providers are built into libcrypto. |
 | Linux | Parent compiler, make, ar, ranlib, nm and readelf; x86_64, aarch64, i686 or armv7. Builds static PIC libraries and retains the parent's cross-compilation target, sysroot and flags. |
 | Android | NDK arm64-v8a, x86_64, armeabi-v7a or x86; static PIC libraries. Windows hosts require the configured MSYS/Perl/GNU make toolchain. |
 | macOS/iOS/tvOS | Native Xcode tools, an explicit SDK, one architecture and deployment target; static PIC libraries. Device and simulator builds use separate target triples and build directories. |
@@ -32,8 +32,8 @@ of the OpenSSL adapter; project entry points may supply explicit values.
 | `CC_OPENSSL_PERL` | Auto-detected | Host Perl executable. Windows targets require native Windows Perl; POSIX hosts require native POSIX Perl. Windows-hosted Android builds use Perl from `CC_OPENSSL_MSYS_ROOT` instead. |
 | `CC_OPENSSL_MAKE` | Platform-dependent | Windows targets use nmake from the selected Visual Studio instance; an explicit path must match it. POSIX hosts auto-detect make. Windows-hosted Android builds require an explicit absolute path to an existing native Windows GNU make executable. |
 | `CC_OPENSSL_JOBS` | `8` | Maximum compilation parallelism, an integer from `1` through `8`. Applies to jom and portable builds; nmake always uses one job. |
-| `CC_OPENSSL_BACKEND` | `nmake` | Windows-target build backend: `nmake` or `jom`. Selecting `jom` enables bounded parallel compilation. |
-| `CC_OPENSSL_JOM` | Auto-detected when selected | Absolute path to a local jom executable, used only with `CC_OPENSSL_BACKEND=jom`. Requires jom 1.1.0 or newer; it is never downloaded automatically. |
+| `CC_OPENSSL_BACKEND` | `auto` | Windows-target build backend: `auto`, `nmake` or `jom`. The default prefers jom with 8 compile jobs and falls back to serial nmake when jom is not found. Explicit `jom` requires the tool to be available. |
+| `CC_OPENSSL_JOM` | Auto-detected from PATH | Absolute path to a local jom executable, used with `CC_OPENSSL_BACKEND=auto` or `jom`. Requires jom 1.1.0 or newer; an explicitly supplied invalid tool is an error, and no download is performed. |
 | `CC_OPENSSL_RUNTIME_OPENSSLDIR` | `/usr/local/ssl` | Runtime OpenSSL/certificate directory for Linux, Android and Apple targets. Must be an absolute target POSIX path, not a host staging directory. |
 
 Windows-hosted Android builds additionally require the following settings:
