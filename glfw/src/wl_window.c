@@ -808,13 +808,18 @@ static void xdgSurfaceHandleConfigure(void* userData,
         _glfwInputWindowMaximize(window, window->wl.maximized);
     }
 
-    window->wl.fullscreen = window->wl.pending.fullscreen;
-
     int width  = window->wl.pending.width;
     int height = window->wl.pending.height;
 
-    if (!window->wl.maximized && !window->wl.fullscreen)
+    if (!window->wl.maximized && !window->wl.pending.fullscreen)
     {
+        // A fullscreen exit can come with the compositor's saved size.
+        // glfwSetWindowMonitor already recorded the requested windowed size.
+        if (window->wl.fullscreen && !window->monitor)
+        {
+            width = window->videoMode.width;
+            height = window->videoMode.height;
+        }
         if (window->numer != GLFW_DONT_CARE && window->denom != GLFW_DONT_CARE)
         {
             const float aspectRatio = (float) width / (float) height;
@@ -826,6 +831,7 @@ static void xdgSurfaceHandleConfigure(void* userData,
         }
     }
 
+    window->wl.fullscreen = window->wl.pending.fullscreen;
     if (resizeWindow(window, width, height))
     {
         _glfwInputWindowSize(window, window->wl.width, window->wl.height);
@@ -882,6 +888,11 @@ void libdecorFrameHandleConfigure(struct libdecor_frame* frame,
 
     if (!maximized && !fullscreen)
     {
+        if (window->wl.fullscreen && !window->monitor)
+        {
+            width = window->videoMode.width;
+            height = window->videoMode.height;
+        }
         if (window->numer != GLFW_DONT_CARE && window->denom != GLFW_DONT_CARE)
         {
             const float aspectRatio = (float) width / (float) height;

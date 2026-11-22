@@ -2521,6 +2521,11 @@ void _glfwSetWindowMonitorX11(_GLFWwindow* window,
         }
         else
         {
+            // The WM can make an undecorated window fullscreen without a GLFW monitor.
+            // Clear that state before requesting the new windowed geometry.
+            if (_glfw.x11.NET_WM_STATE && _glfw.x11.NET_WM_STATE_FULLSCREEN)
+                updateWindowMode(window);
+
             if (!window->resizable)
                 updateNormalHints(window, width, height);
 
