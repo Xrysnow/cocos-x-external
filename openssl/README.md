@@ -44,6 +44,10 @@ Windows-hosted Android builds additionally require the following settings:
 | `CC_OPENSSL_MSYS_ROOT` | Required; no default | Absolute path to an existing MSYS root containing `usr/bin/bash.exe`, `sh.exe`, `perl.exe` and `msys-2.0.dll`. |
 | `CC_OPENSSL_PERL5LIB` | Empty (optional) | Absolute path to an existing directory of additional pure Perl modules for MSYS Perl. |
 
+### Build identity (Windows)
+
+The reusable Windows build tree is keyed by artifact inputs only: pinned source, feature options, target, SDK/toolset and compiler, Perl/NASM versions, and the MSVC tool hashes. Make drivers (`nmake`/`jom`, their versions and job counts), the PowerShell command launcher and the constant `/FS` flag are recorded in `driver.txt` and never invalidate a built stage, so either driver can rebuild the same configured tree. `configured-identity.txt` still pins the generated `Makefile` and `configdata.pm`, and `ready` still pins the staged file inventory.
+
 ### Build configurations
 
 Portable targets support single-configuration Debug/Release or

@@ -61,6 +61,7 @@ function(cc_build_openssl)
     file(MAKE_DIRECTORY "${base}")
     ossl_write_if_changed("${base}/source-files.sha256" "${source_inventory}")
     ossl_write_if_changed("${base}/toolchain.txt" "${OSSL_TOOL_IDENTITY}")
+    ossl_write_if_changed("${base}/driver.txt" "${OSSL_DRIVER_IDENTITY}")
     set(driver "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../openssl/cmake/RunOpenSSL.cmake")
     foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
         set(root "${base}/${config}")
@@ -70,6 +71,8 @@ function(cc_build_openssl)
         else()
             set(crt /MD)
         endif()
+        # The tool hash covers artifact inputs only; make drivers never reach this
+        # identity, so switching nmake/jom or job counts reuses the same tree.
         string(SHA256 id "${profile_hash}\n${OSSL_TOOL_HASH}\n${config}\n${root}\n${OSSL_TARGET}\n${crt}")
         set(descriptor "")
         foreach(pair "SOURCE|${source}" "BUNDLED_SOURCE|${bundled_source}" "SOURCE_HASH|${source_hash}" "ADAPTER_HASH|${adapter_hash}"
@@ -80,7 +83,8 @@ function(cc_build_openssl)
             "PERL|${OSSL_PERL}" "NASM|${OSSL_NASM}" "VCVARS|${OSSL_VCVARS}"
             "VCARGS|${OSSL_VCARGS}" "MAKE|${OSSL_MAKE}" "NMAKE|${OSSL_NMAKE}" "POWERSHELL|${OSSL_POWERSHELL}"
             "BACKEND|${OSSL_BACKEND}" "JOBS|${OSSL_JOBS}" "EXTRA_CFLAGS|${OSSL_EXTRA_CFLAGS}"
-            "MAKE_VERSION|${OSSL_MAKE_VERSION}" "TOOL_RECORDS|${OSSL_TOOL_RECORDS}")
+            "MAKE_VERSION|${OSSL_MAKE_VERSION}" "TOOL_RECORDS|${OSSL_TOOL_RECORDS}"
+            "DRIVER_HASH|${OSSL_DRIVER_HASH}" "DRIVER_IDENTITY|${OSSL_DRIVER_IDENTITY}")
             string(FIND "${pair}" "|" split)
             string(SUBSTRING "${pair}" 0 ${split} name)
             math(EXPR split "${split}+1")
