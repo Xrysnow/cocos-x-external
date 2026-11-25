@@ -37,17 +37,23 @@ endif()
 set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include" CACHE STRING "zlib include dir" FORCE)
 
 if(NOT WINDOWS)
-  set(ZLIB_LIBRARY "${platform_spec_path}/libz.a" CACHE STRING "zlib library" FORCE)
+  set(zlib_bundled_library "${platform_spec_path}/libz.a")
   set_target_properties(${target_name} PROPERTIES
-    IMPORTED_LOCATION "${platform_spec_path}/libz.a"
+    IMPORTED_LOCATION "${zlib_bundled_library}"
   )
 else()
-  set(ZLIB_LIBRARY "${platform_spec_path}/zlib.lib" CACHE STRING "zlib library" FORCE)
+  set(zlib_bundled_library "${platform_spec_path}/zlib.lib")
   set_target_properties(${target_name} PROPERTIES
     IMPORTED_LOCATION "${platform_spec_path}/zlib1.dll"
-    IMPORTED_IMPLIB "${platform_spec_path}/zlib.lib"
+    IMPORTED_IMPLIB "${zlib_bundled_library}"
   )
 endif()
+
+# FindZLIB creates an imported target for dependency probes. Keep its Debug
+# and Release link locations aligned with the same library as dep_zlib.
+foreach(variable ZLIB_LIBRARY ZLIB_LIBRARY_DEBUG ZLIB_LIBRARY_RELEASE)
+  set(${variable} "${zlib_bundled_library}" CACHE FILEPATH "Bundled zlib library" FORCE)
+endforeach()
 
 set_target_properties(${target_name} PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/include"

@@ -228,10 +228,17 @@ components can carry additional notices in their source files.
 - Version: 9.0.0 (`tinyxml2/tinyxml2.h`).
 - License: zlib, as reproduced in the source headers.
 
+## libzip
+
+- Upstream: https://github.com/nih-at/libzip
+- Version: 1.12.1 (`8e037534ccd62f444abbe4ce265443ee74bbfeb3`)
+- License: BSD-3-Clause
+
 ## unzip (minizip-1.2)
 - Upstream: https://github.com/simdsoft/mz12
 - Version: 1.2 with bugfixs & improvements
 - License: zlib
+- Retained source snapshot. Archive I/O uses libzip.
 
 ## uthash 
 - [![Upstream](https://img.shields.io/github/v/tag/troydhanson/uthash?label=Upstream)](https://github.com/troydhanson/uthash)

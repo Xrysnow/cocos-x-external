@@ -21,6 +21,7 @@ Enabling the parent core DLL option does not make every dependency shared.
 | --- | --- |
 | curl | Static source build through [cmake/BuildCurl.cmake](cmake/BuildCurl.cmake), using the project's OpenSSL and zlib targets rather than legacy curl prebuilt libraries. |
 | libjpeg-turbo | Separate source build through [cmake/BuildJpegTurbo.cmake](cmake/BuildJpegTurbo.cmake); only the static libjpeg API library is enabled, with SIMD. TurboJPEG, tools and tests are disabled. |
+| libzip | Static PIC source build through [cmake/BuildLibzip.cmake](cmake/BuildLibzip.cmake). ZIP uses the same platform zlib as cocos. AES uses Windows Cryptography on Windows, CommonCrypto on Apple, and the configured OpenSSL on Android and Linux. |
 | LuaJIT | Official `LuaJIT/` source submodule, enabled by `BUILD_LUA_LIBS`; see the configuration constraints below. |
 | OpenSSL | Bundled source build: shared DLLs on Windows, static PIC libraries on supported Linux, Android and Apple targets. Windows uses `no-module` with default and legacy providers built into libcrypto. |
 | FreeType | Linux uses system FreeType 2.11 or newer. Other platforms build the bundled 2.14.3 sources when `BUILD_EXT_FREETYPE=ON`. |

@@ -28,7 +28,6 @@ option(BUILD_EXT_POLY2TRI "Build with internal poly2tri support" ON)
 option(BUILD_EXT_MD5 "Build with internal md5 support" ON)
 option(BUILD_EXT_ZLIB "Build with internal zlib support" ON)
 option(BUILD_EXT_CURL "Build with internal curl support" ON)
-option(BUILD_EXT_UNZIP "Build with internal unzip support" ON)
 option(BUILD_EXT_ASTC "Build with internal ASTC support" ON)
 option(BUILD_EXT_LLHTTP "Build with lhttp support" ON)
 
@@ -255,6 +254,8 @@ if(BUILD_EXT_OPENSSL)
     target_compile_definitions(external PUBLIC OPENSSL_SUPPRESS_DEPRECATED=1)
 endif()
 
+include(cmake/BuildLibzip.cmake)
+
 if(BUILD_EXT_WEBP)
     add_and_configure(webp webp)
 endif()
@@ -381,11 +382,6 @@ if(WINDOWS OR MACOSX OR LINUX)
         target_link_libraries(external pthread)
     endif()
     target_include_directories(external PUBLIC "glfw/include/GLFW")
-endif()
-
-# unzip depend on zlib
-if(BUILD_EXT_UNZIP)
-    add_and_configure(unzip unzip)
 endif()
 
 if(BUILD_EXT_LLHTTP)

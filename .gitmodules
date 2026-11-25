@@ -20,3 +20,6 @@
 [submodule "ffmpeg-prebuilt"]
 	path = ffmpeg-prebuilt
 	url = https://github.com/Xrysnow/ffmpeg-prebuilt.git
+[submodule "libzip"]
+	path = libzip
+	url = https://github.com/nih-at/libzip.git

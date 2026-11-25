@@ -1,0 +1,34 @@
+# Build the pinned libzip as private, position-independent core code.
+function(cocos_build_libzip)
+    set(libzip_source "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../libzip")
+    if(NOT EXISTS "${libzip_source}/CMakeLists.txt")
+        message(FATAL_ERROR "Initialize the external/libzip submodule before configuring.")
+    endif()
+
+    set(BUILD_SHARED_LIBS OFF)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    set(LIBZIP_DO_INSTALL OFF)
+    set(BUILD_TOOLS OFF)
+    set(BUILD_EXAMPLES OFF)
+    set(BUILD_REGRESS OFF)
+    set(BUILD_OSSFUZZ OFF)
+    set(BUILD_DOC OFF)
+    set(ENABLE_COVERAGE OFF)
+
+    # Select compression and crypto without depending on host-installed extras.
+    set(ENABLE_BZIP2 OFF)
+    set(ENABLE_LZMA OFF)
+    set(ENABLE_ZSTD OFF)
+    set(ENABLE_GNUTLS OFF)
+    set(ENABLE_COMMONCRYPTO "${APPLE}")
+    set(ENABLE_WINDOWS_CRYPTO "${WIN32}")
+    set(ENABLE_OPENSSL OFF)
+    if(NOT APPLE AND NOT WIN32 AND BUILD_EXT_OPENSSL)
+        set(ENABLE_OPENSSL ON)
+    endif()
+
+    add_subdirectory("${libzip_source}" "${CMAKE_CURRENT_BINARY_DIR}/libzip" EXCLUDE_FROM_ALL)
+    configure_target_outdir(zip)
+endfunction()
+
+cocos_build_libzip()
