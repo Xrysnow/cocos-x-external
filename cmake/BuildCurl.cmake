@@ -1,5 +1,8 @@
 # Keep the upstream submodule unchanged and scope its build options locally.
 include_guard(GLOBAL)
+include(CheckFunctionExists)
+include(CheckSymbolExists)
+include(CMakePushCheckState)
 
 function(cocos_build_curl)
     get_filename_component(curl_source "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../curl" ABSOLUTE)
@@ -44,6 +47,26 @@ function(cocos_build_curl)
     set(CURL_USE_LIBSSH2 OFF)
     set(CURL_USE_LIBSSH OFF)
     set(USE_LIBIDN2 OFF)
+
+    # curl adds zlib to its OpenSSL link checks. Run those checks against
+    # OpenSSL alone so they work before the source-built zlib exists.
+    if(NOT TARGET OpenSSL::SSL OR NOT TARGET OpenSSL::Crypto)
+        find_package(OpenSSL MODULE REQUIRED)
+    endif()
+    cmake_push_check_state(RESET)
+    set(CMAKE_REQUIRED_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
+    if(WIN32)
+        list(APPEND CMAKE_REQUIRED_LIBRARIES bcrypt ws2_32 crypt32)
+    endif()
+    check_symbol_exists(DES_ecb_encrypt "openssl/des.h" COCOS_CURL_HAVE_DES_ECB_ENCRYPT)
+    check_function_exists(SSL_set0_wbio COCOS_CURL_HAVE_SSL_SET0_WBIO)
+    set(HAVE_DES_ECB_ENCRYPT "${COCOS_CURL_HAVE_DES_ECB_ENCRYPT}")
+    set(HAVE_SSL_SET0_WBIO "${COCOS_CURL_HAVE_SSL_SET0_WBIO}")
+    if(USE_ECH)
+        check_function_exists(SSL_set1_ech_config_list COCOS_CURL_HAVE_SSL_SET1_ECH_CONFIG_LIST)
+        set(HAVE_SSL_SET1_ECH_CONFIG_LIST "${COCOS_CURL_HAVE_SSL_SET1_ECH_CONFIG_LIST}")
+    endif()
+    cmake_pop_check_state()
 
     add_subdirectory("${curl_source}" "${CMAKE_CURRENT_BINARY_DIR}/curl" EXCLUDE_FROM_ALL)
     configure_target_outdir(libcurl_static)

@@ -173,15 +173,13 @@ target_link_libraries(external dep_zlib)
 
 # libpng
 add_subdirectory(png)
-target_include_directories(png PRIVATE "zlib/include")
+target_link_libraries(png PRIVATE dep_zlib)
 if(ANDROID)
     target_include_directories(png PRIVATE ${cpufeatures_include_dir})
     target_link_libraries(png INTERFACE cpufeatures)
 endif()
 target_link_libraries(external png)
 configure_target_outdir(png)
-set(PNG_PNG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/png" CACHE STRING "png include dir" FORCE)
-set(PNG_LIBRARY "png" CACHE STRING "png include dir" FORCE)
 
 if(BUILD_EXT_BOX2D)
     set(BOX2D_BUILD_UNIT_TESTS OFF CACHE BOOL "Build the Box2D unit tests" FORCE)

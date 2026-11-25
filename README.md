@@ -267,8 +267,8 @@ components can carry additional notices in their source files.
 
 ## zlib
 - [![Upstream](https://img.shields.io/github/v/tag/madler/zlib?label=Upstream)](https://github.com/madler/zlib)
-- Version: bundled package 1.2.13.
-- License: zlib
+- Version: 1.4, core source subset from the [upstream release archive](https://www.zlib.net/fossils/zlib-1.4.tar.gz). Archive SHA-256 is `02dd159783677a749c04adbdd02b55b8a2bcc7e054f51b76b549199a916ad584`.
+- License notice: [zlib](zlib/src/LICENSE).
 
 ## Other bundled support code
 

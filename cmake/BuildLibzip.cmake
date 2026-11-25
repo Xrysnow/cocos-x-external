@@ -14,6 +14,11 @@ function(cocos_build_libzip)
     set(BUILD_OSSFUZZ OFF)
     set(BUILD_DOC OFF)
     set(ENABLE_COVERAGE OFF)
+    if(WIN32)
+        set(ZLIB_LINK_LIBRARY_NAME zlib)
+    else()
+        set(ZLIB_LINK_LIBRARY_NAME z)
+    endif()
 
     # Select compression and crypto without depending on host-installed extras.
     set(ENABLE_BZIP2 OFF)

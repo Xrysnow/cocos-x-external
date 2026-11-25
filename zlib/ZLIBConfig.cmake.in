@@ -1,0 +1,4 @@
+set(ZLIB_VERSION "@zlib_version@")
+set(ZLIB_VERSION_STRING "${ZLIB_VERSION}")
+set(ZLIB_INCLUDE_DIRS "@zlib_include_dir@")
+set(ZLIB_LIBRARIES ZLIB::ZLIB)

@@ -8,9 +8,8 @@ is not a standalone build entry point.
 ## Source layout
 
 Source submodules are pinned by this repository's Git tree; see
-[.gitmodules](.gitmodules). OpenSSL instead uses the bundled, pruned source snapshot
-in `openssl/src/`. The adapters keep their private source copies and outputs in the
-build tree rather than modifying upstream source worktrees.
+[.gitmodules](.gitmodules). OpenSSL and zlib use bundled source snapshots in
+`openssl/src/` and `zlib/src/`. The adapters keep their build outputs in the build tree.
 
 The dependency directory keeps its own library-type and language-standard settings.
 Enabling the parent core DLL option does not make every dependency shared.
@@ -26,7 +25,7 @@ Enabling the parent core DLL option does not make every dependency shared.
 | OpenSSL | Bundled source build: shared DLLs on Windows, static PIC libraries on supported Linux, Android and Apple targets. Windows uses `no-module` with default and legacy providers built into libcrypto. |
 | FreeType | Linux uses system FreeType 2.11 or newer. Other platforms build the bundled 2.14.3 sources when `BUILD_EXT_FREETYPE=ON`. |
 | libpng | Built from the bundled sources on all platforms; Android also links the bundled CPU feature helper. |
-| zlib | Bundled prebuilt libraries, except on iOS, where headers and `libz` come from the explicitly selected device or simulator SDK. |
+| zlib | Bundled source build. Windows produces `zlib1.dll` and its import library. Android, Linux, macOS, and iOS build a static PIC archive with the active toolchain. Cocos, libpng, curl, libzip, and bundled FreeType use the same zlib target. |
 | FFmpeg | Imported prebuilt shared libraries when the parent `CC_ENABLE_VIDEO_TEXTURE` option is enabled. Apple uses `ffmpeg-prebuilt/apple/FFmpeg.xcframework` and its matching headers. |
 | OpenAL Soft | Source submodule. Apple builds use an OpenAL framework by default. Android explicitly enables and requires the bundled Oboe backend. |
 | Oboe | Android library source subset in `oboe/`; upstream samples and tooling are not included. |

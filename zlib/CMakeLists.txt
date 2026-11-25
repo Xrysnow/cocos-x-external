@@ -1,60 +1,71 @@
+include(CheckIncludeFile)
+include(CheckTypeSize)
+include(CMakePushCheckState)
+include(CMakePackageConfigHelpers)
 
-set(lib_name zlib)
-set(target_name dep_${lib_name})
-
-project(${lib_name})
-
-include("../cmake/CocosExternalConfig.cmake")
-
-if(IOS)
-  # The legacy arm64 archive contains device objects, not a simulator slice.
-  # Resolve both headers and the link stub from the explicitly selected SDK.
-  execute_process(COMMAND xcrun --sdk "${CMAKE_OSX_SYSROOT}" --show-sdk-path
-    OUTPUT_VARIABLE zlib_ios_sdk OUTPUT_STRIP_TRAILING_WHITESPACE
-    COMMAND_ERROR_IS_FATAL ANY)
-  find_library(zlib_ios_library NAMES z PATHS "${zlib_ios_sdk}/usr/lib"
-    NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH NO_CACHE REQUIRED)
-  if(NOT EXISTS "${zlib_ios_sdk}/usr/include/zlib.h")
-    message(FATAL_ERROR "The selected iOS SDK does not provide zlib headers")
-  endif()
-  set(ZLIB_INCLUDE_DIR "${zlib_ios_sdk}/usr/include" CACHE PATH "zlib SDK include dir" FORCE)
-  foreach(variable ZLIB_LIBRARY ZLIB_LIBRARY_DEBUG ZLIB_LIBRARY_RELEASE)
-    set(${variable} "${zlib_ios_library}" CACHE FILEPATH "zlib SDK library" FORCE)
-  endforeach()
-  add_library(${target_name} UNKNOWN IMPORTED GLOBAL)
-  set_target_properties(${target_name} PROPERTIES
-    IMPORTED_LOCATION "${zlib_ios_library}"
-    INTERFACE_INCLUDE_DIRECTORIES "${ZLIB_INCLUDE_DIR}")
-  return()
-endif()
-
-if(WINDOWS)
-  add_library(${target_name} SHARED IMPORTED GLOBAL)
-else()
-  add_library(${target_name} STATIC IMPORTED GLOBAL)
-endif()
-
-set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include" CACHE STRING "zlib include dir" FORCE)
-
-if(NOT WINDOWS)
-  set(zlib_bundled_library "${platform_spec_path}/libz.a")
-  set_target_properties(${target_name} PROPERTIES
-    IMPORTED_LOCATION "${zlib_bundled_library}"
-  )
-else()
-  set(zlib_bundled_library "${platform_spec_path}/zlib.lib")
-  set_target_properties(${target_name} PROPERTIES
-    IMPORTED_LOCATION "${platform_spec_path}/zlib1.dll"
-    IMPORTED_IMPLIB "${zlib_bundled_library}"
-  )
-endif()
-
-# FindZLIB creates an imported target for dependency probes. Keep its Debug
-# and Release link locations aligned with the same library as dep_zlib.
-foreach(variable ZLIB_LIBRARY ZLIB_LIBRARY_DEBUG ZLIB_LIBRARY_RELEASE)
-  set(${variable} "${zlib_bundled_library}" CACHE FILEPATH "Bundled zlib library" FORCE)
-endforeach()
-
-set_target_properties(${target_name} PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/include"
+set(zlib_version 1.4)
+set(zlib_include_dir "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(zlib_sources
+    src/adler32.c
+    src/compress.c
+    src/crc32.c
+    src/deflate.c
+    src/gzclose.c
+    src/gzlib.c
+    src/gzread.c
+    src/gzwrite.c
+    src/infback.c
+    src/inffast.c
+    src/inflate.c
+    src/inftrees.c
+    src/trees.c
+    src/uncompr.c
+    src/zutil.c
 )
+
+if(WIN32)
+    add_library(dep_zlib SHARED ${zlib_sources} src/win32/zlib.def)
+    # Preserve the runtime and import-library names for existing consumers.
+    set_target_properties(dep_zlib PROPERTIES
+        RUNTIME_OUTPUT_NAME zlib1
+        ARCHIVE_OUTPUT_NAME zlib
+        PREFIX ""
+        IMPORT_PREFIX ""
+        DEBUG_POSTFIX ""
+    )
+else()
+    add_library(dep_zlib STATIC ${zlib_sources})
+    # Shared dependencies such as FFmpeg can use the platform's zlib.
+    set_target_properties(dep_zlib PROPERTIES
+        OUTPUT_NAME z
+        POSITION_INDEPENDENT_CODE ON
+        C_VISIBILITY_PRESET hidden
+    )
+endif()
+configure_target_outdir(dep_zlib)
+add_library(ZLIB::ZLIB ALIAS dep_zlib)
+
+cmake_push_check_state(RESET)
+check_include_file(unistd.h COCOS_ZLIB_HAVE_UNISTD_H)
+set(CMAKE_REQUIRED_DEFINITIONS -D_LARGEFILE64_SOURCE=1)
+check_type_size(off64_t COCOS_ZLIB_OFF64_T LANGUAGE C)
+cmake_pop_check_state()
+
+target_include_directories(dep_zlib SYSTEM PUBLIC "${zlib_include_dir}")
+target_compile_features(dep_zlib PRIVATE c_std_99)
+target_compile_definitions(dep_zlib PRIVATE
+    ZLIB_BUILD
+    $<$<BOOL:${COCOS_ZLIB_HAVE_UNISTD_H}>:HAVE_UNISTD_H=1>
+)
+if(HAVE_COCOS_ZLIB_OFF64_T)
+    target_compile_definitions(dep_zlib PUBLIC _LARGEFILE64_SOURCE=1)
+endif()
+
+# Clear the legacy paths before redirecting find_package calls from consumers.
+foreach(variable ZLIB_INCLUDE_DIR ZLIB_LIBRARY ZLIB_LIBRARY_DEBUG ZLIB_LIBRARY_RELEASE)
+    unset(${variable} CACHE)
+endforeach()
+configure_file(ZLIBConfig.cmake.in
+    "${CMAKE_FIND_PACKAGE_REDIRECTS_DIR}/ZLIBConfig.cmake" @ONLY)
+write_basic_package_version_file("${CMAKE_FIND_PACKAGE_REDIRECTS_DIR}/ZLIBConfigVersion.cmake"
+    VERSION "${zlib_version}" COMPATIBILITY SameMajorVersion)
